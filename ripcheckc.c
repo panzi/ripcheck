@@ -49,7 +49,7 @@ unsigned get_ushort(FILE *f)
 
 void dumpwave(FILE *f, char* fn)
 {
-    signed int i, x, x1, x2, x3, x4, x5, x6, channels, bits = 0;
+    signed int i, x, x1 = 0, x2 = 0, x3 = 0, x4 = 0, x5 = 0, x6 = 0, channels, bits = 0;
     signed int dupecount = 0;
     unsigned long millisecs = 0;
     unsigned long len;
@@ -61,10 +61,6 @@ void dumpwave(FILE *f, char* fn)
     unsigned long duration_bytes = 0;
     unsigned int bad_areas = 0;
     unsigned long prevbadspot = 0;
-    unsigned long silence_samples_before_start = 0;
-    unsigned long silence_samples_after_start = 0;
-    unsigned long nonsilence_samples_after_start = 0;
-    unsigned short pops = 0;
     unsigned dtype = 0;
     unsigned long poploc = 0;
     unsigned int debug = 0;
