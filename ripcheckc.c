@@ -158,14 +158,17 @@ void dumpwave(FILE *f, char* fn)
 
             /* look for a pop */
             if (x6 == 0 && x5 == 0 && x4 == 0 && x3 == 0 && (x2 > 10000 || x2 < -10000) && count > 12 && (millisecs < almost_end)) {
-                printf("- possible pop found at sample count %lu (%lu millisecs) values: '%i, %i, %i, %i, %i, %i, %i' %s\n", sample, millisecs, x6, x5, x4, x3, x2, x1, x, fn);
+                printf("- possible pop found at sample count %lu (%lu millisecs) values: '%i, %i, %i, %i, %i, %i, %i' %s\n",
+                    sample, millisecs, x6, x5, x4, x3, x2, x1, x, fn);
                 bad_areas++;
                 poploc = x;
             }
 
             /* look for a dropped sample, but not closer than 8 samples to the previous pop */
-            if ( ((x2 > 20000 && x1 == 0 && x > 20000) || (x2 < -20000 && x1 == 0 && x < -20000)) && count > 12 && (count > poploc + 8) && (millisecs < almost_end)) {
-                printf("- possible dropped sample found at sample count %lu (%lu millisecs) values: '%i, %i, %i' %s\n", sample, millisecs, x2, x1, x, fn);
+            if ( ((x2 > 20000 && x1 == 0 && x > 20000) || (x2 < -20000 && x1 == 0 && x < -20000)) &&
+                 count > 12 && (count > poploc + 8) && (millisecs < almost_end)) {
+                printf("- possible dropped sample found at sample count %lu (%lu millisecs) values: '%i, %i, %i' %s\n",
+                    sample, millisecs, x2, x1, x, fn);
                 poploc = x;
                 bad_areas++;
             }
@@ -179,7 +182,8 @@ void dumpwave(FILE *f, char* fn)
                     } else if (x > 0 && x < 10) {
                         /* do nothing */
                     } else {
-                        printf("- %d dupes found at sample count %lu (%lu millisecs) value='%i' %s\n", dupecount, sample, millisecs, x, fn);
+                        printf("- %d dupes found at sample count %lu (%lu millisecs) value='%i' %s\n",
+                            dupecount, sample, millisecs, x, fn);
                         bad_areas++;
                         prevbadspot = millisecs;
                     }
@@ -224,3 +228,4 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+// vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
