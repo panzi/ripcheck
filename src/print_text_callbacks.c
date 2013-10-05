@@ -1,6 +1,6 @@
 #include <stdarg.h>
 
-#include "ripcheckc.h"
+#include "ripcheck.h"
 
 void ripcheck_print_event(const struct ripcheck_context *context, const char *what, size_t sample, uint16_t channel)
 {

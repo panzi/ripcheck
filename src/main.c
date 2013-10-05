@@ -1,7 +1,7 @@
 #include <getopt.h>
 #include <errno.h>
 
-#include "ripcheckc.h"
+#include "ripcheck.h"
 
 const struct option long_options[] = {
     {"help",          no_argument,       0, 'h'},

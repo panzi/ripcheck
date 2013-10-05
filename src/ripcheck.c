@@ -1,5 +1,5 @@
 /*********************************************************************
-    ripcheckc.c
+    ripcheck.c
     
     from:
     http://blog.magnatune.com/2013/09/ripcheck-detect-defects-in-cd-rips.html
@@ -15,7 +15,7 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "ripcheckc.h"
+#include "ripcheck.h"
 #include "ripcheck_endian.h"
 
 #define RIFF_HEADER_SIZE 20
