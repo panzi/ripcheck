@@ -403,8 +403,9 @@ int ripcheck_data(
     const size_t intro_end_sample   = blocks > context->intro_end_sample   ? context->intro_end_sample            : blocks;
     const size_t outro_start_sample = blocks > context->outro_start_sample ? blocks - context->outro_start_sample : 0;
     const size_t min_dupes          = context->min_dupes;
+    const size_t window_size        = context->window_size;
 
-    memset(window,     0, sizeof(int)    * channels * context->window_size);
+    memset(window,     0, sizeof(int)    * channels * window_size);
     memset(dupecounts, 0, sizeof(size_t) * channels);
     memset(poplocs,    0, sizeof(size_t) * channels);
     memset(badlocs,    0, sizeof(size_t) * channels);
@@ -473,8 +474,7 @@ int ripcheck_data(
             int x6 = window[channels * 6 + channel];
 
             if (x6 == 0 && x5 == 0 && x4 == 0 && x3 == 0 && (x2 > pop_limit || x2 < -pop_limit) &&
-                sample > intro_end_sample &&
-                sample < outro_start_sample)
+                sample >= window_size)
             {
                 ++ context->bad_areas;
                 poploc = poplocs[channel] = sample;
@@ -489,7 +489,8 @@ int ripcheck_data(
             // look for a dropped sample, but not closer than 8 samples to the previous pop
             // x2 > drop_limit, x1 == 0, x0 > drop_limit
             // x2 < drop_limit, x1 == 0, x0 < drop_limit
-            if (x1 == 0 && ((x2 > drop_limit && value > drop_limit) || (x2 < -drop_limit && value < -drop_limit)) &&
+            if (x1 == 0 &&
+                ((x2 > drop_limit && value > drop_limit) || (x2 < -drop_limit && value < -drop_limit)) &&
                 sample > poploc + 8 &&
                 sample > intro_end_sample &&
                 sample < outro_start_sample)
@@ -505,7 +506,7 @@ int ripcheck_data(
                 ++ dupecounts[channel];
             }
             else {
-                if (value != 0 &&
+                if (x1 != 0 &&
                     dupecounts[channel] >= min_dupes &&
                     sample < outro_start_sample &&
                     sample > badlocs[channel] + intro_end_sample)

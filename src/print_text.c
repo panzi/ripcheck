@@ -4,12 +4,16 @@
 
 void ripcheck_print_event(const struct ripcheck_context *context, const char *what, size_t sample, uint16_t channel)
 {
-    size_t time = sample * context->fmt.sample_rate;
-    printf("%s: sample = %"PRIzu" (%"PRIzu" ms), channel = %u, values = [", what, sample, time, channel);
-    for (size_t i = 0; i < context->window_size; ++ i) {
-        if (i > 0) printf(", ");
+    double time = (1000.0L * sample) / context->fmt.sample_rate;
+    printf("%s: sample = %"PRIzu" (time = %g ms), channel = %u, values = [",
+        what, sample, time, channel);
+
+    for (size_t i = context->window_size; i > 0;) {
+        -- i;
         printf("%d", context->window[context->fmt.channels * i + channel]);
+        if (i > 0) printf(", ");
     }
+
     printf("]\n");
 }
 
@@ -20,9 +24,9 @@ void ripcheck_text_begin(
     fprintf(stderr, "File: %s\n", context->filename);
     fprintf(stderr, "[RIFF] (%u bytes)\n", context->riff_header.size);
     fprintf(stderr, "[WAVEfmt ] (%u bytes)\n", context->riff_header.chunk.size);
-    fprintf(stderr, "  Data type = %u (1 = PCM)\n", context->fmt.audio_format);
+    fprintf(stderr, "  Audio format = %u (1 = PCM)\n", context->fmt.audio_format);
     fprintf(stderr, "  Number of channels = %u (1 = mono, 2 = stereo)\n", context->fmt.channels);
-    fprintf(stderr, "  Sampling rate = %uHz\n", context->fmt.sample_rate);
+    fprintf(stderr, "  Sample rate = %uHz\n", context->fmt.sample_rate);
     fprintf(stderr, "  Bytes / second = %u\n", context->fmt.byte_rate);
     fprintf(stderr, "  Block alignment = %u\n", context->fmt.block_align);
     fprintf(stderr, "  Bits / sample = %u\n", context->fmt.bits_per_sample);
@@ -33,8 +37,9 @@ void ripcheck_text_sample_data(
 	const struct ripcheck_context *context,
     uint32_t data_size)
 {
-    size_t duration = (data_size / context->fmt.block_align) * context->fmt.sample_rate;
-    fprintf(stderr, "  Duration = %"PRIzu" milliseconds\n", duration);
+    double duration = (double)data_size / context->fmt.byte_rate;
+    fprintf(stderr, "  Data size = %u bytes\n", data_size);
+    fprintf(stderr, "  Duration = %g sec\n", duration);
 }
 
 void ripcheck_text_possible_pop(
