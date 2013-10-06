@@ -42,6 +42,7 @@ static int parse_size(const char *str, size_t *size)
     return 0;
 }
 
+#ifdef WITH_VISUALIZE
 static int parse_image_options(const char *str, struct ripcheck_image_options *image_options)
 {
     if (*str == '\0') {
@@ -75,6 +76,7 @@ static int parse_image_options(const char *str, struct ripcheck_image_options *i
 
     return 0;
 }
+#endif
 
 static void usage (int argc, char *argv[])
 {
@@ -127,7 +129,7 @@ int main (int argc, char *argv[])
                 break;
 
 #else
-                fprintf("Not compiled with support for writing images.\n");
+                fprintf(stderr,"Not compiled with support for writing images.\n");
                 return 1;
 #endif
 
