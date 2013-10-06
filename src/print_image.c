@@ -96,9 +96,8 @@ static void write_image(const char *filename, png_bytep *img, size_t width, size
     printf("written image: %s\n", filename);
 
 finalize:
-    if (fp)   fclose(fp);
-    if (info) png_free_data(png, info, PNG_FREE_ALL, -1);
-    if (png)  png_destroy_write_struct(&png, (png_infopp)NULL);
+    if (fp)  fclose(fp);
+    if (png) png_destroy_write_struct(&png, info ? &info : NULL);
 }
 
 static const char *basename(const char *path)
@@ -142,15 +141,14 @@ static void print_image(
 
     if (!img) {
         perror(filename);
-        free_image(img, height);
         return;
     }
 
     fill_rect(img, 0, 0, width - 1, height - 1, 255, 255, 255);
 
     for (size_t i = context->window_size; i > 0;) {
-        int val = context->window[context->fmt.channels * --i + channel] * (int)sample_height / max_value;
         size_t x = (context->window_size - i) * sample_width;
+        int val = context->window[context->fmt.channels * --i + channel] * (int)sample_height / max_value;
         png_byte red = 0, green = 0, blue = 0;
         if (i >= mark_start && i <= mark_end) {
             red = 255;
@@ -175,7 +173,7 @@ static void print_image(
         }
     }
 
-    fill_rect(img, 0, zero, width, zero, 127, 127, 127);
+    fill_rect(img, 0, zero, width - 1, zero, 127, 127, 127);
 
     write_image(filename, img, width, height);
 

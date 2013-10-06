@@ -36,6 +36,7 @@ static void ripcheck_context_cleanup(struct ripcheck_context *context)
     free(context->window);
     free(context->dupecounts);
     free(context->poplocs);
+    free(context->badlocs);
 }
 
 static unsigned int to_full_byte(int bits)
@@ -419,7 +420,7 @@ int ripcheck_data(
             "The size of the 'data' chunk (%u) is not a multiple of the block alignment (%u).",
             size, block_align);
     }
-printf("drop limit %d\n",drop_limit);
+
     for (size_t sample = 0; sample < max_sample; ++ sample)
     {
         if (fread(frame, block_align, 1, f) != 1)
@@ -508,9 +509,9 @@ printf("drop limit %d\n",drop_limit);
             else {
                 size_t dupeloc = sample - 1;
                 if ((x1 <= -dupe_limit || x1 >= dupe_limit) &&
-                    dupecounts[channel] >= min_dupes &&
+                    dupecounts[channel] >= min_dupes /*&&
                     dupeloc < outro_start_sample &&
-                    dupeloc > badlocs[channel] + intro_end_sample)
+                    dupeloc > badlocs[channel] + intro_end_sample */)
                 {
                     ++ context->bad_areas;
                     badlocs[channel] = dupeloc;
