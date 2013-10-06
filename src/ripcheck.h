@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 
-#if defined(__WINDOWS__) && !defined(__CYGWIN__)
+#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__CYGWIN__)
 #    ifdef _WIN64
 #        define PRIzu PRIu64
 #        define PRIzx PRIx64
