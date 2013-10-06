@@ -147,8 +147,8 @@ int ripcheck(
     FILE *f,
     const char *filename,
 	ripcheck_time_t max_time,
-	ripcheck_time_t intro_end,
-	ripcheck_time_t outro_start,
+	ripcheck_time_t intro_length,
+	ripcheck_time_t outro_length,
 	ripcheck_value_t pop_limit,
 	ripcheck_value_t drop_limit,
 	ripcheck_value_t dupe_limit,
@@ -236,9 +236,9 @@ int ripcheck(
     context.drop_limit = get_value(max_value, drop_limit);
     context.dupe_limit = get_value(max_value, dupe_limit);
 
-    context.max_sample         = time_to_samples(&context, max_time);
-    context.intro_end_sample   = time_to_samples(&context, intro_end);
-    context.outro_start_sample = time_to_samples(&context, outro_start);
+    context.max_sample   = time_to_samples(&context, max_time);
+    context.intro_length = time_to_samples(&context, intro_length);
+    context.outro_length = time_to_samples(&context, outro_length);
 
     callbacks->begin(callbacks->data, &context);
 
@@ -400,8 +400,8 @@ int ripcheck_data(
     const int drop_limit = context->drop_limit;
     const int dupe_limit = context->dupe_limit;
 
-    const size_t intro_end_sample   = blocks > context->intro_end_sample   ? context->intro_end_sample            : blocks;
-    const size_t outro_start_sample = blocks > context->outro_start_sample ? blocks - context->outro_start_sample : 0;
+    const size_t intro_end_sample   = blocks > context->intro_length ? context->intro_length          : blocks;
+    const size_t outro_start_sample = blocks > context->outro_length ? blocks - context->outro_length : 0;
     const size_t min_dupes          = context->min_dupes;
     const size_t window_size        = context->window_size;
     const size_t window_shift       = (window_size - 1) * channels * sizeof(int);
@@ -474,7 +474,8 @@ int ripcheck_data(
             // look for a pop
             // (x2 ... x6) == 0, abs(x1) > pop_limit
             size_t poploc = sample - 2;
-            if (x6 == 0 && x5 == 0 && x4 == 0 && x3 == 0 && (x2 > pop_limit || x2 < -pop_limit) && sample > 4)
+            if (x6 == 0 && x5 == 0 && x4 == 0 && x3 == 0 && (x2 > pop_limit || x2 < -pop_limit) &&
+                sample > 4 && poploc < outro_start_sample)
             {
                 ++ context->bad_areas;
                 poplocs[channel] = poploc;
@@ -509,9 +510,9 @@ int ripcheck_data(
             else {
                 size_t dupeloc = sample - 1;
                 if ((x1 <= -dupe_limit || x1 >= dupe_limit) &&
-                    dupecounts[channel] >= min_dupes /*&&
+                    dupecounts[channel] >= min_dupes &&
                     dupeloc < outro_start_sample &&
-                    dupeloc > badlocs[channel] + intro_end_sample */)
+                    dupeloc > badlocs[channel] + intro_end_sample)
                 {
                     ++ context->bad_areas;
                     badlocs[channel] = dupeloc;

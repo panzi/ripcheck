@@ -14,8 +14,8 @@ const struct option long_options[] = {
     {"visualize",     optional_argument, 0, 'V'},
     {"max-time",      required_argument, 0, 't'},
     {"max-bad-areas", required_argument, 0, 'b'},
-    {"intro-end",     required_argument, 0, 'i'},
-    {"outro-start",   required_argument, 0, 'o'},
+    {"intro-length",  required_argument, 0, 'i'},
+    {"outro-length",  required_argument, 0, 'o'},
     {"pop-limit",     required_argument, 0, 'p'},
     {"drop-limit",    required_argument, 0, 'd'},
     {"dupe-limit",    required_argument, 0, 'u'},
@@ -84,12 +84,12 @@ static void usage (int argc, char *argv[])
 int main (int argc, char *argv[])
 {
     // initialize with default values
-	ripcheck_time_t max_time    = { SIZE_MAX, RIPCHECK_SAMP };
-	ripcheck_time_t intro_end   = { 5, RIPCHECK_SEC };
-	ripcheck_time_t outro_start = { 5, RIPCHECK_SEC };
-	ripcheck_value_t pop_limit  = { .ratio = 0.33333, .unit = RIPCHECK_RATIO };
-	ripcheck_value_t drop_limit = { .ratio = 0.66666, .unit = RIPCHECK_RATIO };
-	ripcheck_value_t dupe_limit = { .ratio = 0.00033, .unit = RIPCHECK_RATIO };
+	ripcheck_time_t max_time     = { SIZE_MAX, RIPCHECK_SAMP };
+	ripcheck_time_t intro_length = { 5, RIPCHECK_SEC };
+	ripcheck_time_t outro_length = { 5, RIPCHECK_SEC };
+	ripcheck_value_t pop_limit   = { .ratio = 0.33333, .unit = RIPCHECK_RATIO };
+	ripcheck_value_t drop_limit  = { .ratio = 0.66666, .unit = RIPCHECK_RATIO };
+	ripcheck_value_t dupe_limit  = { .ratio = 0.00033, .unit = RIPCHECK_RATIO };
 	size_t min_dupes     = 400;
 	size_t max_bad_areas = SIZE_MAX;
     size_t window_size   = RIPCHECK_MIN_WINDOW_SIZE;
@@ -138,14 +138,14 @@ int main (int argc, char *argv[])
 
             case 'i':
                 if (ripcheck_parse_time(optarg, &intro_end) != 0) {
-                    fprintf(stderr, "Illegal value for --intro-end: %s\n", optarg);
+                    fprintf(stderr, "Illegal value for --intro-length: %s\n", optarg);
                     return 1;
                 }
                 break;
 
             case 'o':
-                if (ripcheck_parse_time(optarg, &outro_start) != 0) {
-                    fprintf(stderr, "Illegal value for --outro-start: %s\n", optarg);
+                if (ripcheck_parse_time(optarg, &outro_length) != 0) {
+                    fprintf(stderr, "Illegal value for --outro-length: %s\n", optarg);
                     return 1;
                 }
                 break;
@@ -200,7 +200,7 @@ int main (int argc, char *argv[])
     }
 
     if (optind >= argc) {
-        return ripcheck(stdin, "<stdin>", max_time, intro_end, outro_start,
+        return ripcheck(stdin, "<stdin>", max_time, intro_length, outro_length,
             pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
             &callbacks) == 0 ? 0 : 1;
     }
@@ -209,7 +209,7 @@ int main (int argc, char *argv[])
             FILE *f = fopen(argv[i], "rb");
 
             if (f) {
-                int errnum = ripcheck(f, argv[i], max_time, intro_end, outro_start,
+                int errnum = ripcheck(f, argv[i], max_time, intro_length, outro_length,
                     pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
                     &callbacks);
                 fclose(f);

@@ -207,7 +207,7 @@ void ripcheck_image_dupes(
     uint16_t     channel)
 {
     ripcheck_text_dupes(data, context, sample, channel);
-    print_image(data, context, sample, channel, "dupes", 1, context->min_dupes);
+    print_image(data, context, sample, channel, "dupes", 1, context->dupecounts[channel]);
 }
 
 // vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4

@@ -88,8 +88,8 @@ typedef struct ripcheck_time {
 struct ripcheck_context {
     const char *filename;
     size_t max_sample;
-	size_t intro_end_sample;
-	size_t outro_start_sample;
+	size_t intro_length;
+	size_t outro_length;
 	int    pop_limit;
 	int    drop_limit;
 	int    dupe_limit;
@@ -173,8 +173,8 @@ int ripcheck(
 	FILE *f,
     const char *filename,
 	ripcheck_time_t max_time,
-	ripcheck_time_t intro_end,
-	ripcheck_time_t outro_start,
+	ripcheck_time_t intro_length,
+	ripcheck_time_t outro_length,
 	ripcheck_value_t pop_limit,
 	ripcheck_value_t drop_limit,
 	ripcheck_value_t dupe_limit,
