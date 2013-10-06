@@ -102,14 +102,14 @@ finalize:
 
 static const char *basename(const char *path)
 {
-	const char *ptr = strrchr(path, '/');
+    const char *ptr = strrchr(path, '/');
 #if defined(__WINDOWS__) || defined(__CYGWIN__)
-	/* Windows supports both / and \ */
-	const char *ptr2 = strrchr(path, '\\');
-	if (ptr2 > ptr)
-		ptr = ptr2;
+    /* Windows supports both / and \ */
+    const char *ptr2 = strrchr(path, '\\');
+    if (ptr2 > ptr)
+        ptr = ptr2;
 #endif
-	return ptr ? ptr + 1 : path;
+    return ptr ? ptr + 1 : path;
 }
 
 static void print_image(

@@ -1,5 +1,5 @@
-#ifndef RIPCHECKC_ENDIAN_H__
-#define RIPCHECKC_ENDIAN_H__
+#ifndef RIPCHECK_ENDIAN_H__
+#define RIPCHECK_ENDIAN_H__
 
 /* This provides htole32/le32toh & Co. on Windows, Linux, *BSD, and Max OS X. */
 

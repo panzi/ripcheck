@@ -4,7 +4,7 @@
 #include "ripcheck.h"
 #include "print_text.h"
 
-#ifdef WITH_IMAGE
+#ifdef WITH_VISUALIZE
 #include "print_image.h"
 #endif
 
@@ -19,6 +19,7 @@ const struct option long_options[] = {
     {"pop-limit",     required_argument, 0, 'p'},
     {"drop-limit",    required_argument, 0, 'd'},
     {"dupe-limit",    required_argument, 0, 'u'},
+    {"pop-drop-dist", required_argument, 0, 's'},
     {"min-dupes",     required_argument, 0, 'm'},
     {"window-size",   required_argument, 0, 'w'},
     {0,               0,                 0,  0 }
@@ -84,23 +85,24 @@ static void usage (int argc, char *argv[])
 int main (int argc, char *argv[])
 {
     // initialize with default values
-	ripcheck_time_t max_time     = { SIZE_MAX, RIPCHECK_SAMP };
-	ripcheck_time_t intro_length = { 5, RIPCHECK_SEC };
-	ripcheck_time_t outro_length = { 5, RIPCHECK_SEC };
-	ripcheck_value_t pop_limit   = { .ratio = 0.33333, .unit = RIPCHECK_RATIO };
-	ripcheck_value_t drop_limit  = { .ratio = 0.66666, .unit = RIPCHECK_RATIO };
-	ripcheck_value_t dupe_limit  = { .ratio = 0.00033, .unit = RIPCHECK_RATIO };
-	size_t min_dupes     = 400;
-	size_t max_bad_areas = SIZE_MAX;
+    ripcheck_time_t max_time      = { SIZE_MAX, RIPCHECK_SAMP };
+    ripcheck_time_t intro_length  = { 5, RIPCHECK_SEC };
+    ripcheck_time_t outro_length  = { 5, RIPCHECK_SEC };
+    ripcheck_time_t pop_drop_dist = { 8, RIPCHECK_SAMP };
+    ripcheck_value_t pop_limit    = { .ratio = 0.33333, .unit = RIPCHECK_RATIO };
+    ripcheck_value_t drop_limit   = { .ratio = 0.66666, .unit = RIPCHECK_RATIO };
+    ripcheck_value_t dupe_limit   = { .ratio = 0.00033, .unit = RIPCHECK_RATIO };
+    size_t min_dupes     = 400;
+    size_t max_bad_areas = SIZE_MAX;
     size_t window_size   = RIPCHECK_MIN_WINDOW_SIZE;
     struct ripcheck_callbacks callbacks = ripcheck_callbacks_print_text;
 
-#ifdef WITH_IMAGE
+#ifdef WITH_VISUALIZE
     struct ripcheck_image_options image_options = { 20, 50 };
 #endif
 
     int opt = 0;
-    while ((opt = getopt_long(argc, argv, "hvV,t:b:i:o:p:d:u:m:w:", long_options, NULL)) != -1)
+    while ((opt = getopt_long(argc, argv, "hvV,t:b:i:o:p:d:u:m:w:s:", long_options, NULL)) != -1)
     {
         switch (opt)
         {
@@ -113,7 +115,7 @@ int main (int argc, char *argv[])
                 return 0;
 
             case 'V':
-#ifdef WITH_IMAGE
+#ifdef WITH_VISUALIZE
                 if (optarg && parse_image_options(optarg, &image_options) != 0) {
                     fprintf(stderr, "Illegal value for --visualize: %s\n", optarg);
                 }
@@ -137,7 +139,7 @@ int main (int argc, char *argv[])
                 break;
 
             case 'i':
-                if (ripcheck_parse_time(optarg, &intro_end) != 0) {
+                if (ripcheck_parse_time(optarg, &intro_length) != 0) {
                     fprintf(stderr, "Illegal value for --intro-length: %s\n", optarg);
                     return 1;
                 }
@@ -171,6 +173,13 @@ int main (int argc, char *argv[])
                 }
                 break;
 
+            case 's':
+                if (ripcheck_parse_time(optarg, &pop_drop_dist) != 0) {
+                    fprintf(stderr, "Illegal value for --pop-drop-dist: %s\n", optarg);
+                    return 1;
+                }
+                break;
+
             case 'm':
                 if (parse_size(optarg, &min_dupes) != 0 || min_dupes <= 1) {
                     fprintf(stderr, "Illegal value for --min-dupes: %s\n", optarg);
@@ -200,7 +209,7 @@ int main (int argc, char *argv[])
     }
 
     if (optind >= argc) {
-        return ripcheck(stdin, "<stdin>", max_time, intro_length, outro_length,
+        return ripcheck(stdin, "<stdin>", max_time, intro_length, outro_length, pop_drop_dist,
             pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
             &callbacks) == 0 ? 0 : 1;
     }
@@ -209,7 +218,7 @@ int main (int argc, char *argv[])
             FILE *f = fopen(argv[i], "rb");
 
             if (f) {
-                int errnum = ripcheck(f, argv[i], max_time, intro_length, outro_length,
+                int errnum = ripcheck(f, argv[i], max_time, intro_length, outro_length, pop_drop_dist,
                     pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
                     &callbacks);
                 fclose(f);

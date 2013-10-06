@@ -146,14 +146,15 @@ int ripcheck_parse_time(const char *str, ripcheck_time_t *timeptr)
 int ripcheck(
     FILE *f,
     const char *filename,
-	ripcheck_time_t max_time,
-	ripcheck_time_t intro_length,
-	ripcheck_time_t outro_length,
-	ripcheck_value_t pop_limit,
-	ripcheck_value_t drop_limit,
-	ripcheck_value_t dupe_limit,
-	size_t min_dupes,
-	size_t max_bad_areas,
+    ripcheck_time_t max_time,
+    ripcheck_time_t intro_length,
+    ripcheck_time_t outro_length,
+    ripcheck_time_t pop_drop_dist,
+    ripcheck_value_t pop_limit,
+    ripcheck_value_t drop_limit,
+    ripcheck_value_t dupe_limit,
+    size_t min_dupes,
+    size_t max_bad_areas,
     size_t window_size,
     struct ripcheck_callbacks *callbacks)
 {
@@ -236,9 +237,10 @@ int ripcheck(
     context.drop_limit = get_value(max_value, drop_limit);
     context.dupe_limit = get_value(max_value, dupe_limit);
 
-    context.max_sample   = time_to_samples(&context, max_time);
-    context.intro_length = time_to_samples(&context, intro_length);
-    context.outro_length = time_to_samples(&context, outro_length);
+    context.max_sample    = time_to_samples(&context, max_time);
+    context.intro_length  = time_to_samples(&context, intro_length);
+    context.outro_length  = time_to_samples(&context, outro_length);
+    context.pop_drop_dist = time_to_samples(&context, pop_drop_dist);
 
     callbacks->begin(callbacks->data, &context);
 
@@ -402,6 +404,7 @@ int ripcheck_data(
 
     const size_t intro_end_sample   = blocks > context->intro_length ? context->intro_length          : blocks;
     const size_t outro_start_sample = blocks > context->outro_length ? blocks - context->outro_length : 0;
+    const size_t pop_drop_dist      = context->pop_drop_dist;
     const size_t min_dupes          = context->min_dupes;
     const size_t window_size        = context->window_size;
     const size_t window_shift       = (window_size - 1) * channels * sizeof(int);
@@ -429,7 +432,7 @@ int ripcheck_data(
             callbacks->error(callbacks->data, context, errnum, "%s", strerror(errnum));
             return errnum;
         }
-
+i
         // decode samples into first row of window
         for (size_t channel = 0; channel < channels; ++ channel)
         {
@@ -493,7 +496,7 @@ int ripcheck_data(
             size_t droploc = sample - 1;
             if (x1 == 0 &&
                 ((x2 > drop_limit && x0 > drop_limit) || (x2 < -drop_limit && x0 < -drop_limit)) &&
-                droploc > poploc + 8 &&
+                droploc > poploc + pop_drop_dist &&
                 droploc > intro_end_sample &&
                 droploc < outro_start_sample)
             {
