@@ -27,8 +27,9 @@ void ripcheck_print_event(
 
 void ripcheck_text_begin(
     void *data,
-    const struct ripcheck_context *context)
+	const struct ripcheck_context *context)
 {
+    (void)data;
     fprintf(stderr, "File: %s\n", context->filename);
     fprintf(stderr, "[RIFF] (%u bytes)\n", context->riff_header.size);
     fprintf(stderr, "[WAVEfmt ] (%u bytes)\n", context->riff_header.chunk.size);
@@ -42,9 +43,10 @@ void ripcheck_text_begin(
 
 void ripcheck_text_sample_data(
     void *data,
-    const struct ripcheck_context *context,
+	const struct ripcheck_context *context,
     uint32_t data_size)
 {
+    (void)data;
     double duration = (double)data_size / context->fmt.byte_rate;
     fprintf(stderr, "  Data size = %u bytes\n", data_size);
     fprintf(stderr, "  Duration = %g sec\n", duration);
@@ -52,35 +54,39 @@ void ripcheck_text_sample_data(
 
 void ripcheck_text_possible_pop(
     void        *data,
-    const struct ripcheck_context *context,
+	const struct ripcheck_context *context,
     size_t       sample,
     uint16_t     channel)
 {
+    (void)data;
     ripcheck_print_event(context, "pop", sample, channel, "");
 }
 
 void ripcheck_text_possible_drop(
     void        *data,
-    const struct ripcheck_context *context,
+	const struct ripcheck_context *context,
     size_t       sample,
     uint16_t     channel)
 {
+    (void)data;
     ripcheck_print_event(context, "drop", sample, channel, "");
 }
 
 void ripcheck_text_dupes(
     void        *data,
-    const struct ripcheck_context *context,
+	const struct ripcheck_context *context,
     size_t       sample,
     uint16_t     channel)
 {
+    (void)data;
     ripcheck_print_event(context, "dupes", sample, channel, "dupes = %"PRIzu", ", context->dupecounts[channel]);
 }
 
 void ripcheck_text_complete(
     void *data,
-    const struct ripcheck_context *context)
+	const struct ripcheck_context *context)
 {
+    (void)data;
     if (context->bad_areas == 0) {
         printf("done: all ok\n");
     }
@@ -91,33 +97,40 @@ void ripcheck_text_complete(
 
 void ripcheck_text_error(
     void *data,
-    const struct ripcheck_context *context,
+	const struct ripcheck_context *context,
     int errnum,
     const char *fmt, ...)
 {
+    (void)data;
+    (void)context;
+    (void)errnum;
+
     va_list ap;
-    fprintf(stderr, "error: ");
+	fprintf(stderr, "error: ");
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
-    fprintf(stderr, "\n");
+	fprintf(stderr, "\n");
 }
 
 void ripcheck_text_warning(
     void *data,
-    const struct ripcheck_context *context,
+	const struct ripcheck_context *context,
     const char *fmt, ...)
 {
+    (void)data;
+    (void)context;
+
     va_list ap;
-    fprintf(stderr, "warning: ");
+	fprintf(stderr, "warning: ");
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
-    fprintf(stderr, "\n");
+	fprintf(stderr, "\n");
 }
 
 struct ripcheck_callbacks ripcheck_callbacks_print_text = {
-    NULL,
+	NULL,
     ripcheck_text_begin,
     ripcheck_text_sample_data,
     ripcheck_text_possible_pop,

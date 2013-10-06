@@ -162,12 +162,13 @@ static void print_image(
             val = -val;
             fill_rect(img,
                 x, zero,
-                x + sample_width - 1, val >= sample_height ? height - 1 : zero + val,
+                x + sample_width - 1,
+                (unsigned int)val >= sample_height ? height - 1 : zero + val,
                 red, green, blue);
         }
         else {
             fill_rect(img,
-                x, val > zero ? 0 : zero - val,
+                x, (unsigned int)val > zero ? 0 : zero - val,
                 x + sample_width - 1, zero,
                 red, green, blue);
         }

@@ -60,9 +60,9 @@ static int get_value(const int max_value, const ripcheck_value_t value)
 {
     switch (value.unit)
     {
-        case RIPCHECK_RATIO:    return (int)(value.ratio * max_value);
+        case RIPCHECK_RATIO:    return (int)(value.value.ratio * max_value);
         case RIPCHECK_ABSOLUTE:
-        default:                return value.absolute;
+        default:                return value.value.absolute;
     }
 }
 
@@ -91,8 +91,8 @@ int ripcheck_parse_value(const char *str, ripcheck_value_t *valueptr)
             return ERANGE;
         }
 
-        valueptr->unit  = RIPCHECK_RATIO;
-        valueptr->ratio = ratio;
+        valueptr->unit        = RIPCHECK_RATIO;
+        valueptr->value.ratio = ratio;
     }
     else {
         long long absval = strtoll(str, &endptr, 10);
@@ -100,12 +100,12 @@ int ripcheck_parse_value(const char *str, ripcheck_value_t *valueptr)
         if (*skipws(endptr) != '\0') {
             return EINVAL;
         }
-        else if (absval < 0 || absval > SIZE_MAX) {
+        else if (absval < 0 || (unsigned long long)absval > SIZE_MAX) {
             return ERANGE;
         }
 
-        valueptr->unit     = RIPCHECK_ABSOLUTE;
-        valueptr->absolute = absval;
+        valueptr->unit           = RIPCHECK_ABSOLUTE;
+        valueptr->value.absolute = absval;
     }
 
     return 0;
@@ -120,7 +120,7 @@ int ripcheck_parse_time(const char *str, ripcheck_time_t *timeptr)
         return EINVAL;
     }
 
-    if (time < 0 || time > SIZE_MAX) {
+    if (time < 0 || (unsigned long long)time > SIZE_MAX) {
         return ERANGE;
     }
     

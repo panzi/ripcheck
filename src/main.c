@@ -33,7 +33,7 @@ static int parse_size(const char *str, size_t *size)
     if (*endptr != '\0' || endptr == str) {
         return EINVAL;
     }
-    else if (value < 0 || value > SIZE_MAX) {
+    else if (value < 0 || (unsigned long long)value > SIZE_MAX) {
         return ERANGE;
     }
 
@@ -57,7 +57,7 @@ static int parse_image_options(const char *str, struct ripcheck_image_options *i
         if (*endptr != '\0') {
             return EINVAL;
         }
-        else if (sample_height <= 0 || sample_height > SIZE_MAX) {
+        else if (sample_height <= 0 || (unsigned long long)sample_height > SIZE_MAX) {
             return ERANGE;
         }
 
@@ -67,7 +67,7 @@ static int parse_image_options(const char *str, struct ripcheck_image_options *i
         return EINVAL;
     }
 
-    if (sample_width <= 0 || sample_width > SIZE_MAX) {
+    if (sample_width <= 0 || (unsigned long long)sample_width > SIZE_MAX) {
         return ERANGE;
     }
 
@@ -89,9 +89,9 @@ int main (int argc, char *argv[])
     ripcheck_time_t intro_length  = { 5, RIPCHECK_SEC };
     ripcheck_time_t outro_length  = { 5, RIPCHECK_SEC };
     ripcheck_time_t pop_drop_dist = { 8, RIPCHECK_SAMP };
-    ripcheck_value_t pop_limit    = { .ratio = 0.33333, .unit = RIPCHECK_RATIO };
-    ripcheck_value_t drop_limit   = { .ratio = 0.66666, .unit = RIPCHECK_RATIO };
-    ripcheck_value_t dupe_limit   = { .ratio = 0.00033, .unit = RIPCHECK_RATIO };
+    ripcheck_value_t pop_limit    = { .value.ratio = 0.33333, .unit = RIPCHECK_RATIO };
+    ripcheck_value_t drop_limit   = { .value.ratio = 0.66666, .unit = RIPCHECK_RATIO };
+    ripcheck_value_t dupe_limit   = { .value.ratio = 0.00033, .unit = RIPCHECK_RATIO };
     size_t min_dupes     = 400;
     size_t max_bad_areas = SIZE_MAX;
     size_t window_size   = RIPCHECK_MIN_WINDOW_SIZE;

@@ -70,7 +70,7 @@ typedef struct ripcheck_value {
     union {
         double ratio;
         int    absolute;
-    };
+    } value;
     enum ripcheck_value_unit unit;
 } ripcheck_value_t;
 
