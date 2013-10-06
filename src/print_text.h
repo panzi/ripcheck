@@ -7,7 +7,8 @@ extern struct ripcheck_callbacks ripcheck_callbacks_print_text;
 
 void ripcheck_print_event(
 	const struct ripcheck_context *context,
-	const char *what, size_t sample, uint16_t channel);
+	const char *what, size_t sample, uint16_t channel,
+	const char *fmt, ...) __attribute__ ((format (printf, 5, 6)));
 
 void ripcheck_text_begin(
     void *data,

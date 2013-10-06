@@ -2,11 +2,19 @@
 
 #include "ripcheck.h"
 
-void ripcheck_print_event(const struct ripcheck_context *context, const char *what, size_t sample, uint16_t channel)
+void ripcheck_print_event(
+    const struct ripcheck_context *context, const char *what, size_t sample, uint16_t channel,
+    const char *fmt, ...)
 {
+    va_list ap;
     double time = (1000.0L * sample) / context->fmt.sample_rate;
-    printf("%s: sample = %"PRIzu" (time = %g ms), channel = %u, values = [",
-        what, sample, time, channel);
+    printf("%s: sample = %"PRIzu" (time = %g ms), channel = %u, ", what, sample, time, channel);
+
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+
+    printf("values = [");
 
     for (size_t i = context->window_size; i > 0;) {
         -- i;
@@ -48,7 +56,7 @@ void ripcheck_text_possible_pop(
     size_t       sample,
     uint16_t     channel)
 {
-    ripcheck_print_event(context, "pop", sample, channel);
+    ripcheck_print_event(context, "pop", sample, channel, "");
 }
 
 void ripcheck_text_possible_drop(
@@ -57,7 +65,7 @@ void ripcheck_text_possible_drop(
     size_t       sample,
     uint16_t     channel)
 {
-    ripcheck_print_event(context, "drop", sample, channel);
+    ripcheck_print_event(context, "drop", sample, channel, "");
 }
 
 void ripcheck_text_dupes(
@@ -66,17 +74,7 @@ void ripcheck_text_dupes(
     size_t       sample,
     uint16_t     channel)
 {
-    double time = (1000.0L * sample) / context->fmt.sample_rate;
-    printf("dupes: sample = %"PRIzu" (time = %g ms), channel = %u, dupes = %"PRIzu", values = [",
-        sample, time, channel, context->dupecounts[channel]);
-
-    for (size_t i = context->window_size; i > 0;) {
-        -- i;
-        printf("%d", context->window[context->fmt.channels * i + channel]);
-        if (i > 0) printf(", ");
-    }
-
-    printf("]\n");
+    ripcheck_print_event(context, "dupes", sample, channel, "dupes = %"PRIzu", ", context->dupecounts[channel]);
 }
 
 void ripcheck_text_complete(
