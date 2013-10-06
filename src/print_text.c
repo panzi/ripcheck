@@ -66,7 +66,17 @@ void ripcheck_text_dupes(
     size_t       sample,
     uint16_t     channel)
 {
-    ripcheck_print_event(context, "dupes", sample, channel);
+    double time = (1000.0L * sample) / context->fmt.sample_rate;
+    printf("dupes: sample = %"PRIzu" (time = %g ms), channel = %u, dupes = %"PRIzu", values = [",
+        sample, time, channel, context->dupecounts[channel]);
+
+    for (size_t i = context->window_size; i > 0;) {
+        -- i;
+        printf("%d", context->window[context->fmt.channels * i + channel]);
+        if (i > 0) printf(", ");
+    }
+
+    printf("]\n");
 }
 
 void ripcheck_text_complete(

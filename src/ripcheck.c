@@ -23,7 +23,6 @@
 #define RIFF_CHUNK_HEADER_SIZE 8
 
 #define PCM 1
-#define WINDOW_SIZE 7
 
 static int ripcheck_data(
     FILE *f,
@@ -154,6 +153,7 @@ int ripcheck(
 	ripcheck_value_t dupe_limit,
 	size_t min_dupes,
 	size_t max_bad_areas,
+    size_t window_size,
     struct ripcheck_callbacks *callbacks)
 {
     struct ripcheck_context context;
@@ -278,7 +278,7 @@ int ripcheck(
         return errnum;
     }
 
-    context.window_size = WINDOW_SIZE;
+    context.window_size = window_size < RIPCHECK_MIN_WINDOW_SIZE ? RIPCHECK_MIN_WINDOW_SIZE : window_size;
     context.window = malloc(sizeof(int) * context.fmt.channels * context.window_size);
 
     if (!context.window)
@@ -379,7 +379,6 @@ int ripcheck_data(
     size_t  *dupecounts = context->dupecounts;
     size_t  *poplocs    = context->poplocs;
     size_t  *badlocs    = context->badlocs;
-    size_t   poploc     = 0;
 
     const uint16_t channels        = context->fmt.channels;
     const uint16_t block_align     = context->fmt.block_align;
@@ -404,6 +403,7 @@ int ripcheck_data(
     const size_t outro_start_sample = blocks > context->outro_start_sample ? blocks - context->outro_start_sample : 0;
     const size_t min_dupes          = context->min_dupes;
     const size_t window_size        = context->window_size;
+    const size_t window_shift       = (window_size - 1) * channels * sizeof(int);
 
     memset(window,     0, sizeof(int)    * channels * window_size);
     memset(dupecounts, 0, sizeof(size_t) * channels);
@@ -419,7 +419,7 @@ int ripcheck_data(
             "The size of the 'data' chunk (%u) is not a multiple of the block alignment (%u).",
             size, block_align);
     }
-
+printf("drop limit %d\n",drop_limit);
     for (size_t sample = 0; sample < max_sample; ++ sample)
     {
         if (fread(frame, block_align, 1, f) != 1)
@@ -437,35 +437,32 @@ int ripcheck_data(
             //
             // 1 to 8 bits are unsigned
             // 9 and more bits are signed
-            unsigned int value = 0;
+            int x0 = 0;
 
             // I guess that this *might* be a performance drain:
             for (size_t byte = 0; byte < bytes_per_sample; ++ byte)
             {
-                value = (frame[channel + byte] << (byte * 8)) | value;
+                x0 = (frame[channel + byte] << (byte * 8)) | x0;
             }
 
             // shift away padding
-            value >>= shift;
+            x0 >>= shift;
 
             if (bits_per_sample > 8)
             {
-                if (value & mid) { // negative
-                    window[channel] = (int)(value | mask);
+                if (x0 & mid) { // negative
+                    window[channel] = x0 = x0 | mask;
                 }
                 else { // positive
-                    window[channel] = (int)value;
+                    window[channel] = x0;
                 }
             }
             else
             {
-                window[channel] = (int)value - mid;
+                window[channel] = x0 = x0 - mid;
             }
 
             // analyze audio per channel
-
-            // look for a pop
-            // (x2 ... x6) == 0, abs(x1) > pop_limit
             int x1 = window[channels * 1 + channel];
             int x2 = window[channels * 2 + channel];
             int x3 = window[channels * 3 + channel];
@@ -473,11 +470,13 @@ int ripcheck_data(
             int x5 = window[channels * 5 + channel];
             int x6 = window[channels * 6 + channel];
 
-            if (x6 == 0 && x5 == 0 && x4 == 0 && x3 == 0 && (x2 > pop_limit || x2 < -pop_limit) &&
-                sample >= window_size)
+            // look for a pop
+            // (x2 ... x6) == 0, abs(x1) > pop_limit
+            size_t poploc = sample - 2;
+            if (x6 == 0 && x5 == 0 && x4 == 0 && x3 == 0 && (x2 > pop_limit || x2 < -pop_limit) && sample > 4)
             {
                 ++ context->bad_areas;
-                poploc = poplocs[channel] = sample;
+                poplocs[channel] = poploc;
                 callbacks->possible_pop(callbacks->data, context, sample, channel);
                 if (context->bad_areas >= max_bad_areas) break;
             }
@@ -489,41 +488,42 @@ int ripcheck_data(
             // look for a dropped sample, but not closer than 8 samples to the previous pop
             // x2 > drop_limit, x1 == 0, x0 > drop_limit
             // x2 < drop_limit, x1 == 0, x0 < drop_limit
+            size_t droploc = sample - 1;
             if (x1 == 0 &&
-                ((x2 > drop_limit && value > drop_limit) || (x2 < -drop_limit && value < -drop_limit)) &&
-                sample > poploc + 8 &&
-                sample > intro_end_sample &&
-                sample < outro_start_sample)
+                ((x2 > drop_limit && x0 > drop_limit) || (x2 < -drop_limit && x0 < -drop_limit)) &&
+                droploc > poploc + 8 &&
+                droploc > intro_end_sample &&
+                droploc < outro_start_sample)
             {
                 ++ context->bad_areas;
-                poplocs[channel] = sample;
+//                poplocs[channel] = droploc;
                 callbacks->possible_drop(callbacks->data, context, sample, channel);
                 if (context->bad_areas >= max_bad_areas) break;
             }
 
             // look for duplicates
-            if (value == x1) {
+            if (x0 == x1) {
                 ++ dupecounts[channel];
             }
             else {
-                if (x1 != 0 &&
+                size_t dupeloc = sample - 1;
+                if ((x1 <= -dupe_limit || x1 >= dupe_limit) &&
                     dupecounts[channel] >= min_dupes &&
-                    sample < outro_start_sample &&
-                    sample > badlocs[channel] + intro_end_sample)
+                    dupeloc < outro_start_sample &&
+                    dupeloc > badlocs[channel] + intro_end_sample)
                 {
-                    if (value <= -dupe_limit || value >= dupe_limit) {
-                        ++ context->bad_areas;
-                        badlocs[channel] = sample;
-                        callbacks->dupes(callbacks->data, context, sample, channel);
-                        if (context->bad_areas >= max_bad_areas) break;
-                    }
+                    ++ context->bad_areas;
+                    badlocs[channel] = dupeloc;
+                    callbacks->dupes(callbacks->data, context, sample, channel);
+                    if (context->bad_areas >= max_bad_areas) break;
                 }
                 dupecounts[channel] = 0;
             }
         }
 
         // shift the window
-        memmove(window + channels, window, (WINDOW_SIZE - 1) * channels * sizeof(int));
+        // TODO: make window a ring buffer to increase speed for big window sizes?
+        memmove(window + channels, window, window_shift);
     }
 
     return 0;

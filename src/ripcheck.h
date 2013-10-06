@@ -35,6 +35,8 @@
 	RIPCHECK_STR(RIPCHECK_VERSION_MINOR) "." \
 	RIPCHECK_STR(RIPCHECK_VERSION_PATCH)
 
+#define RIPCHECK_MIN_WINDOW_SIZE (size_t)7
+
 // a RIFF WAVE struct should be properly aligned anyway, but just to be sure use pragma pack
 #pragma pack(push, 1)
 struct riff_chunk_header {
@@ -176,6 +178,7 @@ int ripcheck(
 	ripcheck_value_t pop_limit,
 	ripcheck_value_t drop_limit,
 	ripcheck_value_t dupe_limit,
+	size_t window_size,
 	size_t min_dupes,
 	size_t max_bad_areas,
     struct ripcheck_callbacks *callbacks);
