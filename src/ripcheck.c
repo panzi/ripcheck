@@ -432,7 +432,7 @@ int ripcheck_data(
             callbacks->error(callbacks->data, context, errnum, "%s", strerror(errnum));
             return errnum;
         }
-i
+
         // decode samples into first row of window
         for (size_t channel = 0; channel < channels; ++ channel)
         {
