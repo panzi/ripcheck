@@ -19,6 +19,10 @@
 #	define PRIzx "zx"
 #endif
 
+#ifndef __GNUC__
+#	define __attribute__(X)
+#endif
+
 #define _RIPCHECK_STR(V) #V
 #define RIPCHECK_STR(V) _RIPCHECK_STR(V)
 
@@ -140,16 +144,19 @@ typedef void (*ripcheck_error_t)(
 	const struct ripcheck_context *context,
     int          errnum,
 	const char  *fmt,
-	...);
+	...) __attribute__ ((format (printf, 4, 5)));
 
 typedef void (*ripcheck_warning_t)(
     void        *data,
 	const struct ripcheck_context *context,
 	const char  *fmt,
-	...);
+	...) __attribute__ ((format (printf, 3, 4)));
 
 struct ripcheck_callbacks {
+	// data that gets passed to the callback functions
+	// currently unused
     void *data;
+
     ripcheck_begin_t         begin;
     ripcheck_sample_data_t   sample_data;
     ripcheck_possible_pop_t  possible_pop;
@@ -159,12 +166,6 @@ struct ripcheck_callbacks {
     ripcheck_error_t         error;
     ripcheck_warning_t       warning;
 };
-
-extern struct ripcheck_callbacks ripcheck_callbacks_print_text;
-
-void ripcheck_print_event(
-	const struct ripcheck_context *context,
-	const char *what, size_t sample, uint16_t channel);
 
 int ripcheck(
 	FILE *f,

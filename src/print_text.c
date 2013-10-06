@@ -13,7 +13,7 @@ void ripcheck_print_event(const struct ripcheck_context *context, const char *wh
     printf("]\n");
 }
 
-static void ripcheck_txt_begin(
+void ripcheck_text_begin(
     void *data,
 	const struct ripcheck_context *context)
 {
@@ -28,7 +28,7 @@ static void ripcheck_txt_begin(
     fprintf(stderr, "  Bits / sample = %u\n", context->fmt.bits_per_sample);
 }
 
-static void ripcheck_txt_sample_data(
+void ripcheck_text_sample_data(
     void *data,
 	const struct ripcheck_context *context,
     uint32_t data_size)
@@ -37,7 +37,7 @@ static void ripcheck_txt_sample_data(
     fprintf(stderr, "  Duration = %"PRIzu" milliseconds\n", duration);
 }
 
-static void ripcheck_txt_possible_pop(
+void ripcheck_text_possible_pop(
     void        *data,
 	const struct ripcheck_context *context,
     size_t       sample,
@@ -46,7 +46,7 @@ static void ripcheck_txt_possible_pop(
     ripcheck_print_event(context, "pop", sample, channel);
 }
 
-static void ripcheck_txt_possible_drop(
+void ripcheck_text_possible_drop(
     void        *data,
 	const struct ripcheck_context *context,
     size_t       sample,
@@ -55,7 +55,7 @@ static void ripcheck_txt_possible_drop(
     ripcheck_print_event(context, "drop", sample, channel);
 }
 
-static void ripcheck_txt_dupes(
+void ripcheck_text_dupes(
     void        *data,
 	const struct ripcheck_context *context,
     size_t       sample,
@@ -64,7 +64,7 @@ static void ripcheck_txt_dupes(
     ripcheck_print_event(context, "dupes", sample, channel);
 }
 
-static void ripcheck_txt_complete(
+void ripcheck_text_complete(
     void *data,
 	const struct ripcheck_context *context)
 {
@@ -76,7 +76,7 @@ static void ripcheck_txt_complete(
     }
 }
 
-static void ripcheck_txt_error(
+void ripcheck_text_error(
     void *data,
 	const struct ripcheck_context *context,
     int errnum,
@@ -90,7 +90,7 @@ static void ripcheck_txt_error(
 	fprintf(stderr, "\n");
 }
 
-static void ripcheck_txt_warning(
+void ripcheck_text_warning(
     void *data,
 	const struct ripcheck_context *context,
     const char *fmt, ...)
@@ -105,14 +105,14 @@ static void ripcheck_txt_warning(
 
 struct ripcheck_callbacks ripcheck_callbacks_print_text = {
 	NULL,
-    ripcheck_txt_begin,
-    ripcheck_txt_sample_data,
-    ripcheck_txt_possible_pop,
-    ripcheck_txt_possible_drop,
-    ripcheck_txt_dupes,
-    ripcheck_txt_complete,
-    ripcheck_txt_error,
-    ripcheck_txt_warning
+    ripcheck_text_begin,
+    ripcheck_text_sample_data,
+    ripcheck_text_possible_pop,
+    ripcheck_text_possible_drop,
+    ripcheck_text_dupes,
+    ripcheck_text_complete,
+    ripcheck_text_error,
+    ripcheck_text_warning
 };
 
 // vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4

@@ -207,13 +207,15 @@ int ripcheck(
     // sanity check of declared sizes
     if (riff_size < pos || fmt_size < WAVE_FMT_SIZE)
     {
-        callbacks->error(callbacks->data, &context, EINVAL, "WAVE file has illegal chunk sizes. RIFF size: %lu, fmt size: %lu",
+        callbacks->error(callbacks->data, &context, EINVAL,
+            "WAVE file has illegal chunk sizes. RIFF size: %u, fmt size: %u",
             riff_size, fmt_size);
         return EINVAL;
     }
 
     // ignore bytes in fmt chunk after the standard number of bytes
-    if (fread(&context.fmt, WAVE_FMT_SIZE, 1, f) != 1 || (fmt_size > WAVE_FMT_SIZE && fseek(f, fmt_size - WAVE_FMT_SIZE, SEEK_CUR) != 0))
+    if (fread(&context.fmt, WAVE_FMT_SIZE, 1, f) != 1 ||
+        (fmt_size > WAVE_FMT_SIZE && fseek(f, fmt_size - WAVE_FMT_SIZE, SEEK_CUR) != 0))
     {
         int errnum = errno;
         callbacks->error(callbacks->data, &context, errnum, "%s", strerror(errnum));

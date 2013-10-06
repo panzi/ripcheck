@@ -2,6 +2,7 @@
 #include <errno.h>
 
 #include "ripcheck.h"
+#include "print_text.h"
 
 const struct option long_options[] = {
     {"help",          no_argument,       0, 'h'},
@@ -38,7 +39,7 @@ static int parse_size(const char *str, size_t *size)
 static void usage (int argc, char *argv[])
 {
     // TODO
-    printf("usage: %s [options] <file>...\n", argc > 0 ? argv[0] : "ripcheck");
+    printf("usage: %s [options] <file>...\n\nTODO\n", argc > 0 ? argv[0] : "ripcheck");
 }
 
 int main (int argc, char *argv[])
