@@ -8,6 +8,10 @@ struct ripcheck_image_options {
     size_t sample_height;
 };
 
+int ripcheck_parse_image_options(
+    const char *str,
+    struct ripcheck_image_options *image_options);
+
 void ripcheck_image_possible_pop(
     void        *data,
     const struct ripcheck_context *context,

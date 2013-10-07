@@ -72,7 +72,7 @@ static char *skipws(char *ptr)
     return ptr;
 }
 
-int ripcheck_parse_value(const char *str, ripcheck_volume_t *volumeptr)
+int ripcheck_parse_volume(const char *str, ripcheck_volume_t *volumeptr)
 {
     char *endptr = NULL;
     const size_t len = strlen(str);
@@ -95,12 +95,12 @@ int ripcheck_parse_value(const char *str, ripcheck_volume_t *volumeptr)
         volumeptr->volume.ratio = ratio;
     }
     else {
-        long long absval = strtoll(str, &endptr, 10);
+        unsigned long long absval = strtoull(str, &endptr, 10);
 
         if (*skipws(endptr) != '\0') {
             return EINVAL;
         }
-        else if (absval < 0 || (unsigned long long)absval > SIZE_MAX) {
+        else if (absval > SIZE_MAX) {
             return ERANGE;
         }
 
@@ -114,13 +114,13 @@ int ripcheck_parse_value(const char *str, ripcheck_volume_t *volumeptr)
 int ripcheck_parse_time(const char *str, ripcheck_time_t *timeptr)
 {
     char *endptr = NULL;
-    long long time = strtoll(str, &endptr, 10);
+    unsigned long long time = strtoull(str, &endptr, 10);
 
     if (endptr == str) {
         return EINVAL;
     }
 
-    if (time < 0 || (unsigned long long)time > SIZE_MAX) {
+    if (time > SIZE_MAX) {
         return ERANGE;
     }
     

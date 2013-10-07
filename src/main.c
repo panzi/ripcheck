@@ -28,12 +28,12 @@ const struct option long_options[] = {
 static int parse_size(const char *str, size_t *size)
 {
     char *endptr = NULL;
-    long long value = strtoll(str, &endptr, 10);
+    unsigned long long value = strtoull(str, &endptr, 10);
 
     if (*endptr != '\0' || endptr == str) {
         return EINVAL;
     }
-    else if (value < 0 || (unsigned long long)value > SIZE_MAX) {
+    else if (value > SIZE_MAX) {
         return ERANGE;
     }
 
@@ -41,42 +41,6 @@ static int parse_size(const char *str, size_t *size)
 
     return 0;
 }
-
-#ifdef WITH_VISUALIZE
-static int parse_image_options(const char *str, struct ripcheck_image_options *image_options)
-{
-    if (*str == '\0') {
-        return EINVAL;
-    }
-
-    char *endptr = NULL;
-    long long sample_width = strtoll(str, &endptr, 10);
-
-    if (*endptr == 'x') {
-        long long sample_height = strtoll(str, &endptr, 10);
-
-        if (*endptr != '\0') {
-            return EINVAL;
-        }
-        else if (sample_height <= 0 || (unsigned long long)sample_height > SIZE_MAX) {
-            return ERANGE;
-        }
-
-        image_options->sample_height = sample_height;
-    }
-    else if (*endptr != '\0') {
-        return EINVAL;
-    }
-
-    if (sample_width <= 0 || (unsigned long long)sample_width > SIZE_MAX) {
-        return ERANGE;
-    }
-
-    image_options->sample_width = sample_width;
-
-    return 0;
-}
-#endif
 
 static void usage (int argc, char *argv[])
 {
@@ -167,7 +131,7 @@ int main (int argc, char *argv[])
 
             case 'V':
 #ifdef WITH_VISUALIZE
-                if (optarg && parse_image_options(optarg, &image_options) != 0) {
+                if (optarg && ripcheck_parse_image_options(optarg, &image_options) != 0) {
                     fprintf(stderr, "Illegal value for --visualize: %s\n", optarg);
                 }
 
@@ -204,21 +168,21 @@ int main (int argc, char *argv[])
                 break;
 
             case 'p':
-                if (ripcheck_parse_value(optarg, &pop_limit) != 0) {
+                if (ripcheck_parse_volume(optarg, &pop_limit) != 0) {
                     fprintf(stderr, "Illegal value for --pop-limit: %s\n", optarg);
                     return 1;
                 }
                 break;
 
             case 'd':
-                if (ripcheck_parse_value(optarg, &drop_limit) != 0) {
+                if (ripcheck_parse_volume(optarg, &drop_limit) != 0) {
                     fprintf(stderr, "Illegal value for --drop-limit: %s\n", optarg);
                     return 1;
                 }
                 break;
 
             case 'u':
-                if (ripcheck_parse_value(optarg, &dupe_limit) != 0) {
+                if (ripcheck_parse_volume(optarg, &dupe_limit) != 0) {
                     fprintf(stderr, "Illegal value for --dupe-limit: %s\n", optarg);
                     return 1;
                 }

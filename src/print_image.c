@@ -2,6 +2,8 @@
 #include "print_image.h"
 
 #include <limits.h>
+#include <errno.h>
+#include <strings.h>
 #include <png.h>
 
 static png_bytep *alloc_image(size_t width, size_t height)
@@ -179,6 +181,117 @@ static void print_image(
     write_image(filename, img, width, height);
 
     free_image(img, height);
+}
+
+/*
+static int parse_color(const char *str, uint8_t *color) {
+    while (isspace(*str)) ++ str;
+
+    return EINVAL; // TODO
+}
+
+static int parse_dim(const char *str, const char *end, size_t *dim) {
+    char *endptr = NULL;
+    unsigned long long value = strtoull(str, &endptr, 10);
+    if (endptr == str) return EINVAL;
+    while (isspace(*endptr)) ++ endptr;
+    if (endptr != end) return EINVAL;
+    if (value == 0 || value > SIZE_MAX) return EINVAL;
+    *dim = value;
+    return 0;
+}
+*/
+
+// TODO: change format to: KEY=VALUE[,KEY=VALUE]*
+// Example:
+// --visulaize=samp-width=20,samp-height=100,bg-color=FFFFFF,wave-color=0000FF,zero-color=808080,error-color=FF0000,hi-color=FFFF50
+int ripcheck_parse_image_options(const char *str, struct ripcheck_image_options *image_options)
+{
+    if (*str == '\0') {
+        return EINVAL;
+    }
+
+/* TODO
+    while (*str) {
+        const char *comma  = strchr(str, ',');
+        const char *assing = strchr(str, '=');
+        const char *value;
+        char *endptr = NULL;
+        size_t keylen;
+        int errnum = 0;
+
+        if (!comma) comma = str + strlen(str);
+        if (assign > comma) {
+            value  = comma;
+            keylen = comma - str;
+        }
+        else {
+            value  = assign + 1;
+            keylen = assign - str;
+        }
+
+        if (strncasecmp(str, "samp-width", keylen) == 0) {
+            if ((errnum = parse_dim(value, &image_options->sample_width)) != 0)
+                return errnum;
+        }
+        else if (strncasecmp(str, "samp-height", keylen) == 0) {
+            if ((errnum = parse_dim(value, &image_options->sample_height)) != 0)
+                return errnum;
+        }
+        else if (strncasecmp(str, "bg-color", keylen) == 0) {
+            if ((errnum = parse_color(value, image_options->bg_color)) != 0)
+                return errnum;
+        }
+        else if (strncasecmp(str, "wave-color", keylen) == 0) {
+            if ((errnum = parse_color(value, image_options->wave_color)) != 0)
+                return errnum;
+        }
+        else if (strncasecmp(str, "zero-color", keylen) == 0) {
+            if ((errnum = parse_color(value, image_options->zero_color)) != 0)
+                return errnum;
+        }
+        else if (strncasecmp(str, "error-color", keylen) == 0) {
+            if ((errnum = parse_color(value, image_options->error_color)) != 0)
+                return errnum;
+        }
+        else if (strncasecmp(str, "hi-color", keylen) == 0) {
+            if ((errnum = parse_color(value, image_options->hi_color)) != 0)
+                return errnum;
+        }
+        else {
+            return EINVAL;
+        }
+
+        str = comma;
+    }
+*/
+
+    char *endptr = NULL;
+    unsigned long long sample_width = strtoull(str, &endptr, 10);
+
+    if (*endptr == 'x') {
+        unsigned long long sample_height = strtoull(str, &endptr, 10);
+
+        if (*endptr != '\0') {
+            return EINVAL;
+        }
+        else if (sample_height == 0 || sample_height > SIZE_MAX) {
+            return ERANGE;
+        }
+
+        image_options->sample_height = sample_height;
+    }
+    else if (*endptr != '\0') {
+        return EINVAL;
+    }
+
+    if (sample_width == 0 || sample_width > SIZE_MAX) {
+        return ERANGE;
+    }
+
+    image_options->sample_width = sample_width;
+
+    return 0;
 }
 
 void ripcheck_image_possible_pop(

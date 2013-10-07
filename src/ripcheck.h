@@ -108,7 +108,7 @@ struct ripcheck_context {
     size_t   max_bad_areas;
 };
 
-int ripcheck_parse_value(const char *str, ripcheck_volume_t *volume);
+int ripcheck_parse_volume(const char *str, ripcheck_volume_t *volume);
 int ripcheck_parse_time(const char *str, ripcheck_time_t *time);
 
 /* Callback Types */
