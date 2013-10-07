@@ -6,9 +6,8 @@
 extern struct ripcheck_callbacks ripcheck_callbacks_print_text;
 
 void ripcheck_print_event(
-    const struct ripcheck_context *context,
-    const char *what, size_t sample, uint16_t channel,
-    const char *fmt, ...) __attribute__ ((format (printf, 5, 6)));
+    const struct ripcheck_context *context, const char *what, uint16_t channel,
+    size_t last_window_sample, size_t first_error_sample, size_t last_error_sample);
 
 void ripcheck_text_begin(
     void *data,
@@ -22,20 +21,21 @@ void ripcheck_text_sample_data(
 void ripcheck_text_possible_pop(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel);
+    uint16_t     channel,
+    size_t       last_window_sample);
 
 void ripcheck_text_possible_drop(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel);
+    uint16_t     channel,
+    size_t       last_window_sample,
+    size_t       droped_sample);
 
 void ripcheck_text_dupes(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel);
+    uint16_t     channel,
+    size_t       last_window_sample);
 
 void ripcheck_text_complete(
     void *data,

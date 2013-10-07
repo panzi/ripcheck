@@ -36,7 +36,7 @@ static void ripcheck_context_cleanup(struct ripcheck_context *context)
     free(context->window);
     free(context->dupecounts);
     free(context->poplocs);
-    free(context->badlocs);
+    free(context->dupelocs);
 }
 
 static unsigned int to_full_byte(int bits)
@@ -313,9 +313,9 @@ int ripcheck(
         return errnum;
     }
 
-    context.badlocs = malloc(sizeof(size_t) * context.fmt.channels);
+    context.dupelocs = malloc(sizeof(size_t) * context.fmt.channels);
 
-    if (!context.badlocs)
+    if (!context.dupelocs)
     {
         int errnum = errno;
         ripcheck_context_cleanup(&context);
@@ -382,7 +382,7 @@ int ripcheck_data(
     int     *window     = context->window;
     size_t  *dupecounts = context->dupecounts;
     size_t  *poplocs    = context->poplocs;
-    size_t  *badlocs    = context->badlocs;
+    size_t  *dupelocs   = context->dupelocs;
 
     const uint16_t channels        = context->fmt.channels;
     const uint16_t block_align     = context->fmt.block_align;
@@ -413,7 +413,7 @@ int ripcheck_data(
     memset(window,     0, sizeof(int)    * channels * window_size);
     memset(dupecounts, 0, sizeof(size_t) * channels);
     memset(poplocs,    0, sizeof(size_t) * channels);
-    memset(badlocs,    0, sizeof(size_t) * channels);
+    memset(dupelocs,   0, sizeof(size_t) * channels);
 
     callbacks->sample_data(callbacks->data, context, size);
 
@@ -483,7 +483,7 @@ int ripcheck_data(
             {
                 ++ context->bad_areas;
                 poplocs[channel] = poploc;
-                callbacks->possible_pop(callbacks->data, context, sample, channel);
+                callbacks->possible_pop(callbacks->data, context, channel, sample);
                 if (context->bad_areas >= max_bad_areas) break;
             }
             else
@@ -503,7 +503,7 @@ int ripcheck_data(
             {
                 ++ context->bad_areas;
 //                poplocs[channel] = droploc;
-                callbacks->possible_drop(callbacks->data, context, sample, channel);
+                callbacks->possible_drop(callbacks->data, context, channel, sample, droploc);
                 if (context->bad_areas >= max_bad_areas) break;
             }
 
@@ -512,15 +512,15 @@ int ripcheck_data(
                 ++ dupecounts[channel];
             }
             else {
-                size_t dupeloc = sample - 1;
+                size_t dupeloc = sample - dupecounts[channel];
                 if ((x1 <= -dupe_limit || x1 >= dupe_limit) &&
                     dupecounts[channel] >= min_dupes &&
                     dupeloc < outro_start_sample &&
-                    dupeloc > badlocs[channel] + intro_end_sample)
+                    dupeloc > dupelocs[channel] + intro_end_sample)
                 {
                     ++ context->bad_areas;
-                    badlocs[channel] = dupeloc;
-                    callbacks->dupes(callbacks->data, context, sample, channel);
+                    dupelocs[channel] = dupeloc;
+                    callbacks->dupes(callbacks->data, context, channel, sample);
                     if (context->bad_areas >= max_bad_areas) break;
                 }
                 dupecounts[channel] = 0;

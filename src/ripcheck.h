@@ -101,9 +101,9 @@ struct ripcheck_context {
     uint8_t *frame;
     int     *window;
     size_t   window_size;
+    size_t  *dupelocs;
     size_t  *dupecounts;
     size_t  *poplocs;
-    size_t  *badlocs;
     size_t   bad_areas;
     size_t   max_bad_areas;
 };
@@ -124,20 +124,21 @@ typedef void (*ripcheck_sample_data_t)(
 typedef void (*ripcheck_possible_pop_t)(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel);
+    uint16_t     channel,
+    size_t       last_window_sample);
 
 typedef void (*ripcheck_possible_drop_t)(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel);
+    uint16_t     channel,
+    size_t       last_window_sample,
+    size_t       droped_sample);
 
 typedef void (*ripcheck_dupes_t)(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel);
+    uint16_t     channel,
+    size_t       last_window_sample);
 
 typedef void (*ripcheck_complete_t)(
     void        *data,

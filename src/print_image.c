@@ -117,11 +117,11 @@ static const char *basename(const char *path)
 static void print_image(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel,
     const char  *what,
-    size_t       mark_start,
-    size_t       mark_end)
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
 {
     struct ripcheck_image_options *image_options =
         (struct ripcheck_image_options *)data;
@@ -137,7 +137,7 @@ static void print_image(
     const int max_value = ~(~0 << (context->fmt.bits_per_sample - 1));
 
     snprintf(filename, PATH_MAX, "%s_sample_%"PRIzu"_channel_%u_%s.png",
-        basename(context->filename), sample, channel, what);
+        basename(context->filename), first_error_sample, channel, what);
 
     png_bytep *img = alloc_image(width, height);
 
@@ -148,6 +148,8 @@ static void print_image(
 
     fill_rect(img, 0, 0, width - 1, height - 1, 255, 255, 255);
 
+    const size_t mark_start = last_window_sample - last_error_sample;
+    const size_t mark_end   = last_window_sample - first_error_sample;
     for (size_t i = context->window_size; i > 0;) {
         size_t x = (context->window_size - i) * sample_width;
         int val = context->window[context->fmt.channels * --i + channel] * (int)sample_height / max_value;
@@ -297,31 +299,34 @@ int ripcheck_parse_image_options(const char *str, struct ripcheck_image_options 
 void ripcheck_image_possible_pop(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel)
+    uint16_t     channel,
+    size_t       last_window_sample)
 {
-    ripcheck_text_possible_pop(data, context, sample, channel);
-    print_image(data, context, sample, channel, "pop", 2, 2);
+    ripcheck_text_possible_pop(data, context, channel, last_window_sample);
+    print_image(data, context, "pop", channel, last_window_sample,
+        context->poplocs[channel], context->poplocs[channel]);
 }
 
 void ripcheck_image_possible_drop(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel)
+    uint16_t     channel,
+    size_t       last_window_sample,
+    size_t       droped_sample)
 {
-    ripcheck_text_possible_drop(data, context, sample, channel);
-    print_image(data, context, sample, channel, "drop", 1, 1);
+    ripcheck_text_possible_drop(data, context, channel, last_window_sample, droped_sample);
+    print_image(data, context, "drop", channel, last_window_sample, droped_sample, droped_sample);
 }
 
 void ripcheck_image_dupes(
     void        *data,
     const struct ripcheck_context *context,
-    size_t       sample,
-    uint16_t     channel)
+    uint16_t     channel,
+    size_t       last_window_sample)
 {
-    ripcheck_text_dupes(data, context, sample, channel);
-    print_image(data, context, sample, channel, "dupes", 1, context->dupecounts[channel]);
+    ripcheck_text_dupes(data, context, channel, last_window_sample);
+    print_image(data, context, "dupes", channel, last_window_sample,
+    context->dupelocs[channel], context->dupelocs[channel] + context->dupecounts[channel] - 1);
 }
 
 // vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
