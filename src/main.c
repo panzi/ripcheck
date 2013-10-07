@@ -80,8 +80,57 @@ static int parse_image_options(const char *str, struct ripcheck_image_options *i
 
 static void usage (int argc, char *argv[])
 {
-    // TODO
-    printf("usage: %s [options] <file>...\n\nTODO\n", argc > 0 ? argv[0] : "ripcheck");
+    printf(
+        "Usage: %s [OPTIONS] [WAVE-FILE]...\n"
+        "'ripcheck' runs a variety of tests on a PCM WAV file, to see if there are "
+        "potential mistakes that occurred in converting a CD to a WAV file.\n"
+        "\n"
+        "For more information visit:\n"
+        "  http://blog.magnatune.com/2013/09/ripcheck-detect-defects-in-cd-rips.html\n"
+        "  https://github.com/panzi/ripcheck\n"
+        "\n"
+        "Options:\n"
+        "\n"
+        "  -h, --help                  print this help message\n"
+        "  -v, --version               print version information\n"
+#ifdef WITH_VISUALIZE
+        "  -V, --visualize[=PARAMS]    print wave forms around found problems to PNG files\n"
+        "                              TODO: describe PRAMS\n"
+#endif
+        "  -t, --max-time=TIME         stop analyzing at TIME\n"
+        "  -b, --max-bad-areas=COUNT   stop analyzing after COUNT problems found\n"
+        "  -i, --intro-length=TIME     start analyzing at TIME (default: 5 sec)\n"
+        "  -o, --outro-length=TIME     stop analyzng at TIME before end (default: 5 sec)\n"
+        "  -p, --pop-limit=VOLUME      set the minimum volume of a pop to VOLUME (default: 33.333 %%)\n"
+        "  -d, --drop-limit=VOLUME     set the minimum volume of samples around a drop to VOLUME\n"
+        "                              (default: 66.666 %%)\n"
+        "  -s, --pop-drop-dist=TIME    ignore drops before TIME after a pop (default: 8 sampels)\n"
+        "  -u, --dupe-limit=VOLUME     ignore dupes more silent than VOLUME (default: 0.033 %%)\n"
+        "  -m, --min-dupes=COUNT       set the minimum repetiton of the same sample that is\n"
+        "                              recognized as a dupe to COUNT (default: 400)\n"
+        "  -w, --window-size=COUNT     print COUNT samples when a problem is found (minimum: 7)\n"
+        "                              Even if COUNT is bigger ripcheck does not use more than 7\n"
+        "                              samples at a time for detecting problems. (default: 7)\n"
+        "\n"
+        "Units:\n"
+        "\n"
+        "  TIME\n"
+        "    TIME values can be given in samples, seconds or milliseconds.\n"
+        "    Examples: 400 samp, 5 sec, 4320 msec\n"
+        "\n"
+        "    samp, (node) ... samples\n"
+        "    sec, s ......... seconds\n"
+        "    msec, ms ....... millieseconds\n"
+        "\n"
+        "  VOLUME\n"
+        "    VOLUME values can be given in bit rate dependant values or percentages.\n"
+        "    Examples: 32000, 33.33 %%\n"
+        "\n"
+        "    (node) ... bit rate dependant absolute volume\n"
+        "    %% ........ percentage of maximum possible voluem\n"
+        "\n"
+        "Report bugs to: https://github.com/panzi/ripcheck/issues\n",
+        argc > 0 ? argv[0] : "ripcheck");
 }
 
 int main (int argc, char *argv[])
@@ -91,9 +140,9 @@ int main (int argc, char *argv[])
     ripcheck_time_t intro_length  = { 5, RIPCHECK_SEC };
     ripcheck_time_t outro_length  = { 5, RIPCHECK_SEC };
     ripcheck_time_t pop_drop_dist = { 8, RIPCHECK_SAMP };
-    ripcheck_value_t pop_limit    = { .value.ratio = 0.33333, .unit = RIPCHECK_RATIO };
-    ripcheck_value_t drop_limit   = { .value.ratio = 0.66666, .unit = RIPCHECK_RATIO };
-    ripcheck_value_t dupe_limit   = { .value.ratio = 0.00033, .unit = RIPCHECK_RATIO };
+    ripcheck_volume_t pop_limit   = { .volume.ratio = 0.33333, .unit = RIPCHECK_RATIO };
+    ripcheck_volume_t drop_limit  = { .volume.ratio = 0.66666, .unit = RIPCHECK_RATIO };
+    ripcheck_volume_t dupe_limit  = { .volume.ratio = 0.00033, .unit = RIPCHECK_RATIO };
     size_t min_dupes     = 400;
     size_t max_bad_areas = SIZE_MAX;
     size_t window_size   = RIPCHECK_MIN_WINDOW_SIZE;

@@ -56,13 +56,13 @@ static size_t time_to_samples(const struct ripcheck_context *context, const ripc
     }
 }
 
-static int get_value(const int max_value, const ripcheck_value_t value)
+static int abs_volume(const int max_value, const ripcheck_volume_t volume)
 {
-    switch (value.unit)
+    switch (volume.unit)
     {
-        case RIPCHECK_RATIO:    return (int)(value.value.ratio * max_value);
+        case RIPCHECK_RATIO:    return (int)(volume.volume.ratio * max_value);
         case RIPCHECK_ABSOLUTE:
-        default:                return value.value.absolute;
+        default:                return volume.volume.absolute;
     }
 }
 
@@ -72,7 +72,7 @@ static char *skipws(char *ptr)
     return ptr;
 }
 
-int ripcheck_parse_value(const char *str, ripcheck_value_t *valueptr)
+int ripcheck_parse_value(const char *str, ripcheck_volume_t *volumeptr)
 {
     char *endptr = NULL;
     const size_t len = strlen(str);
@@ -91,8 +91,8 @@ int ripcheck_parse_value(const char *str, ripcheck_value_t *valueptr)
             return ERANGE;
         }
 
-        valueptr->unit        = RIPCHECK_RATIO;
-        valueptr->value.ratio = ratio;
+        volumeptr->unit         = RIPCHECK_RATIO;
+        volumeptr->volume.ratio = ratio;
     }
     else {
         long long absval = strtoll(str, &endptr, 10);
@@ -104,8 +104,8 @@ int ripcheck_parse_value(const char *str, ripcheck_value_t *valueptr)
             return ERANGE;
         }
 
-        valueptr->unit           = RIPCHECK_ABSOLUTE;
-        valueptr->value.absolute = absval;
+        volumeptr->unit            = RIPCHECK_ABSOLUTE;
+        volumeptr->volume.absolute = absval;
     }
 
     return 0;
@@ -125,7 +125,8 @@ int ripcheck_parse_time(const char *str, ripcheck_time_t *timeptr)
     }
     
     endptr = skipws(endptr);
-    if (*endptr == '\0' || strcasecmp(endptr, "samp") == 0) {
+    if (*endptr == '\0' || strcasecmp(endptr, "samp") == 0 ||
+        strcasecmp(endptr, "sample") || strcasecmp(endptr, "samples")) {
         timeptr->unit = RIPCHECK_SAMP;
     }
     else if (strcasecmp(endptr, "ms") == 0 || strcasecmp(endptr, "msec") == 0) {
@@ -150,9 +151,9 @@ int ripcheck(
     ripcheck_time_t intro_length,
     ripcheck_time_t outro_length,
     ripcheck_time_t pop_drop_dist,
-    ripcheck_value_t pop_limit,
-    ripcheck_value_t drop_limit,
-    ripcheck_value_t dupe_limit,
+    ripcheck_volume_t pop_limit,
+    ripcheck_volume_t drop_limit,
+    ripcheck_volume_t dupe_limit,
     size_t min_dupes,
     size_t max_bad_areas,
     size_t window_size,
@@ -233,9 +234,9 @@ int ripcheck(
     context.fmt.bits_per_sample = le16toh(context.fmt.bits_per_sample);
 
     const int max_value = ~(~0 << (context.fmt.bits_per_sample - 1));
-    context.pop_limit  = get_value(max_value, pop_limit);
-    context.drop_limit = get_value(max_value, drop_limit);
-    context.dupe_limit = get_value(max_value, dupe_limit);
+    context.pop_limit  = abs_volume(max_value, pop_limit);
+    context.drop_limit = abs_volume(max_value, drop_limit);
+    context.dupe_limit = abs_volume(max_value, dupe_limit);
 
     context.max_sample    = time_to_samples(&context, max_time);
     context.intro_length  = time_to_samples(&context, intro_length);

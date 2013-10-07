@@ -71,9 +71,9 @@ typedef struct ripcheck_value {
     union {
         double ratio;
         int    absolute;
-    } value;
+    } volume;
     enum ripcheck_value_unit unit;
-} ripcheck_value_t;
+} ripcheck_volume_t;
 
 enum ripcheck_time_unit {
     RIPCHECK_SEC,
@@ -108,7 +108,7 @@ struct ripcheck_context {
     size_t   max_bad_areas;
 };
 
-int ripcheck_parse_value(const char *str, ripcheck_value_t *value);
+int ripcheck_parse_value(const char *str, ripcheck_volume_t *volume);
 int ripcheck_parse_time(const char *str, ripcheck_time_t *time);
 
 /* Callback Types */
@@ -178,9 +178,9 @@ int ripcheck(
     ripcheck_time_t intro_length,
     ripcheck_time_t outro_length,
     ripcheck_time_t pop_drop_dist,
-    ripcheck_value_t pop_limit,
-    ripcheck_value_t drop_limit,
-    ripcheck_value_t dupe_limit,
+    ripcheck_volume_t pop_limit,
+    ripcheck_volume_t drop_limit,
+    ripcheck_volume_t dupe_limit,
     size_t window_size,
     size_t min_dupes,
     size_t max_bad_areas,
