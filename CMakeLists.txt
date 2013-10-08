@@ -4,7 +4,11 @@ project(ripcheck)
 
 find_package(PkgConfig)
 
-if(PKG_CONFIG_FOUND)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  # TODO
+  if(NOT(CMAKE_COMPILER_IS_MINGW64))
+  endif()
+elseif(PKG_CONFIG_FOUND)
 	pkg_check_modules(LIBPNG libpng)
 	if(LIBPNG_FOUND)
 		option(WITH_VISUALIZE "Build with visualization support" ON)
@@ -24,7 +28,12 @@ if(MSVC)
   endif()
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   # Update if necessary
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror -std=gnu99 -O2")
+  if(CMAKE_COMPILER_IS_MINGW64)
+    # can't be pedantic because of format strings
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=gnu99 -O2")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror -std=gnu99 -O2")
+  endif()
 endif()
 
 add_subdirectory(src)
