@@ -46,8 +46,8 @@ static void usage (int argc, char *argv[])
 {
     printf(
         "Usage: %s [OPTIONS] [WAVE-FILE]...\n"
-        "'ripcheck' runs a variety of tests on a PCM WAV file, to see if there are "
-        "potential mistakes that occurred in converting a CD to a WAV file.\n"
+        "'ripcheck' runs a variety of tests on a PCM WAV file, to see if there are potential\n"
+        "mistakes that occurred in converting a CD to a WAV file.\n"
         "\n"
         "For more information visit:\n"
         "  http://blog.magnatune.com/2013/09/ripcheck-detect-defects-in-cd-rips.html\n"
@@ -58,8 +58,23 @@ static void usage (int argc, char *argv[])
         "  -h, --help                  print this help message\n"
         "  -v, --version               print version information\n"
 #ifdef WITH_VISUALIZE
-        "  -V, --visualize[=PARAMS]    print wave forms around found problems to PNG files\n"
-        "                              \n"
+        "  -V, --visualize[=PARAMS]    print wave forms around found problems to PNG images\n"
+        "                              PARAMS is a comma separated list of key-value pairs that\n"
+        "                              define the size and color of the generated images.\n"
+        "\n"
+        "                              samp-width=PIXELS      width of a sample (default: 20)\n"
+        "                              samp-height=PIXELS     height of a samle above the zero line\n"
+        "                                                     (default: 50)\n"
+        "                              bg-color=COLOR         background color (default: #FFFFFF)\n"
+        "                              wave-color=COLOR       color of the wave form (default: #2084FF)\n"
+        "                              zero-color=COLOR       color of the zero line (default: #7F7F7F)\n"
+        "                              error-color=COLOR      color of the error sample (default: #FF2020)\n"
+        "                              error-bg-color=COLOR   background color of the error sample\n"
+        "                                                     (default: #FFC440)\n"
+        "\n"
+        "                              COLOR may be a HTML like hexadecimal color string (e.g. #FFFFFF)\n"
+        "                              or one of the 16 defined HTML color names (e.g. white).\n"
+        "\n"
 #endif
         "  -t, --max-time=TIME         stop analyzing at TIME\n"
         "  -b, --max-bad-areas=COUNT   stop analyzing after COUNT problems found\n"
@@ -114,13 +129,13 @@ int main (int argc, char *argv[])
 
 #ifdef WITH_VISUALIZE
     struct ripcheck_image_options image_options = {
-        .sample_width  = 20,
-        .sample_height = 50,
-        .bg_color    = { 255, 255, 255 },
-        .wave_color  = {  32, 132, 255 },
-        .zero_color  = { 127, 127, 127 },
-        .error_color = { 255,  32,  32 },
-        .hi_color    = { 255, 196,  64 }
+        .sample_width   = 20,
+        .sample_height  = 50,
+        .bg_color       = { 255, 255, 255 },
+        .wave_color     = {  32, 132, 255 },
+        .zero_color     = { 127, 127, 127 },
+        .error_color    = { 255,  32,  32 },
+        .error_bg_color = { 255, 196,  64 }
     };
 #endif
 

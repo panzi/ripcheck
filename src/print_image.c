@@ -159,7 +159,7 @@ static void print_image(
         uint8_t *color;
         if (i >= mark_start && i <= mark_end) {
             color = image_options->error_color;
-            fill_rect(img, x, 0, x + sample_width - 1, height - 1, image_options->hi_color);
+            fill_rect(img, x, 0, x + sample_width - 1, height - 1, image_options->error_bg_color);
         }
         else {
             color = image_options->wave_color;
@@ -286,7 +286,7 @@ static int parse_dim(const char *restrict str, char **restrict endptr, size_t *d
 
 // options syntax: KEY=VALUE[,KEY=VALUE]*
 // Example:
-// --visulaize=samp-width=20,samp-height=100,bg-color=white,wave-color=#0000FF,zero-color=gray,error-color=red,hi-color=#FFFF50
+// --visulaize=samp-width=20,samp-height=100,bg-color=white,wave-color=#0000FF,zero-color=gray,error-color=red,error-bg-color=#FFFF50
 int ripcheck_parse_image_options(const char *str, struct ripcheck_image_options *image_options)
 {
     if (*str == '\0') {
@@ -342,8 +342,8 @@ int ripcheck_parse_image_options(const char *str, struct ripcheck_image_options 
             if ((errnum = parse_color(value, &endptr, image_options->error_color)) != 0)
                 return errnum;
         }
-        else if (strncasecmp(str, "hi-color", keylen) == 0) {
-            if ((errnum = parse_color(value, &endptr, image_options->hi_color)) != 0)
+        else if (strncasecmp(str, "error-bg-color", keylen) == 0) {
+            if ((errnum = parse_color(value, &endptr, image_options->error_bg_color)) != 0)
                 return errnum;
         }
         else {
