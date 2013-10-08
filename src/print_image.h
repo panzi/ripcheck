@@ -6,6 +6,11 @@
 struct ripcheck_image_options {
     size_t sample_width;
     size_t sample_height;
+    uint8_t bg_color[3];
+    uint8_t wave_color[3];
+    uint8_t zero_color[3];
+    uint8_t error_color[3];
+    uint8_t hi_color[3];
 };
 
 int ripcheck_parse_image_options(

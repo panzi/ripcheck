@@ -59,12 +59,12 @@ static void usage (int argc, char *argv[])
         "  -v, --version               print version information\n"
 #ifdef WITH_VISUALIZE
         "  -V, --visualize[=PARAMS]    print wave forms around found problems to PNG files\n"
-        "                              TODO: describe PRAMS\n"
+        "                              \n"
 #endif
         "  -t, --max-time=TIME         stop analyzing at TIME\n"
         "  -b, --max-bad-areas=COUNT   stop analyzing after COUNT problems found\n"
         "  -i, --intro-length=TIME     start analyzing at TIME (default: 5 sec)\n"
-        "  -o, --outro-length=TIME     stop analyzng at TIME before end (default: 5 sec)\n"
+        "  -o, --outro-length=TIME     stop analyzing at TIME before end (default: 5 sec)\n"
         "  -p, --pop-limit=VOLUME      set the minimum volume of a pop to VOLUME (default: 33.333 %%)\n"
         "  -d, --drop-limit=VOLUME     set the minimum volume of samples around a drop to VOLUME\n"
         "                              (default: 66.666 %%)\n"
@@ -91,7 +91,7 @@ static void usage (int argc, char *argv[])
         "    Examples: 32000, 33.33 %%\n"
         "\n"
         "    (node) ... bit rate dependant absolute volume\n"
-        "    %% ........ percentage of maximum possible voluem\n"
+        "    %% ........ percentage of maximum possible volume\n"
         "\n"
         "Report bugs to: https://github.com/panzi/ripcheck/issues\n",
         argc > 0 ? argv[0] : "ripcheck");
@@ -113,7 +113,15 @@ int main (int argc, char *argv[])
     struct ripcheck_callbacks callbacks = ripcheck_callbacks_print_text;
 
 #ifdef WITH_VISUALIZE
-    struct ripcheck_image_options image_options = { 20, 50 };
+    struct ripcheck_image_options image_options = {
+        .sample_width  = 20,
+        .sample_height = 50,
+        .bg_color    = { 255, 255, 255 },
+        .wave_color  = {  32, 132, 255 },
+        .zero_color  = { 127, 127, 127 },
+        .error_color = { 255,  32,  32 },
+        .hi_color    = { 255, 196,  64 }
+    };
 #endif
 
     int opt = 0;
@@ -133,6 +141,7 @@ int main (int argc, char *argv[])
 #ifdef WITH_VISUALIZE
                 if (optarg && ripcheck_parse_image_options(optarg, &image_options) != 0) {
                     fprintf(stderr, "Illegal value for --visualize: %s\n", optarg);
+                    return 1;
                 }
 
                 callbacks.data          = &image_options;
