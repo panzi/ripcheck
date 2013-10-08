@@ -175,5 +175,5 @@ use this cmake line:
 
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DWITH_VISUALIZE=OFF
 
-\- John Buckman <john@magnatune.com> (original version)
+\- John Buckman <john@magnatune.com> (original version)  
 \- Mathias Panzenböck (this fork)
