@@ -5,9 +5,30 @@ project(ripcheck)
 find_package(PkgConfig)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  # TODO
-  if(NOT(CMAKE_COMPILER_IS_MINGW64))
-  endif()
+	if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/contrib/libpng/" AND IS_DIRECTORY "${CMAKE_SOURCE_DIR}/contrib/zlib/")
+		option(WITH_VISUALIZE "Build with visualization support" ON)
+	else()
+		option(WITH_VISUALIZE "Build with visualization support" OFF)
+		message("
+To build visualization support for Windows binaries please download
+libpng (libpng-1.2.*-lib.zip) and zlib (zlib1*-dll.zip) and extract
+these archives to contrib/libpng and contrib/zlib.
+
+In order to run the resulting binary you need libpng12.dll (download
+libpng-1.2.*-bin.zip) and zlib1.dll (included in zlib1*-dll.zip).
+
+See:
+http://www.libpng.org/pub/png/libpng.html
+http://www.zlib.net/
+")
+	endif()
+	if(WITH_VISUALIZE)
+		set(LIBPNG_INCLUDE_DIRS
+			"${CMAKE_SOURCE_DIR}/contrib/libpng/include;${CMAKE_SOURCE_DIR}/contrib/zlib/include")
+		set(LIBPNG_LIBRARY_DIRS
+			"${CMAKE_SOURCE_DIR}/contrib/libpng/lib;${CMAKE_SOURCE_DIR}/contrib/zlib/lib")
+		set(LIBPNG_LIBRARIES png12)
+	endif()
 elseif(PKG_CONFIG_FOUND)
 	pkg_check_modules(LIBPNG libpng)
 	if(LIBPNG_FOUND)
@@ -19,21 +40,14 @@ else()
 	option(WITH_VISUALIZE "Build with visualization support" OFF)
 endif()
 
-if(MSVC)
-  # Force to always compile with W4
-  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-  endif()
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  # Update if necessary
-  if(CMAKE_COMPILER_IS_MINGW64)
-    # can't be pedantic because of format strings
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=gnu99 -O2")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror -std=gnu99 -O2")
-  endif()
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+	# Update if necessary
+	if(CMAKE_COMPILER_IS_MINGW64)
+		# can't be pedantic because of format strings
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -std=gnu99 -O2")
+	else()
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -Werror -std=gnu99 -O2")
+	endif()
 endif()
 
 add_subdirectory(src)
