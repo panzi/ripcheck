@@ -110,6 +110,7 @@ struct ripcheck_context {
     size_t intro_length;
     size_t outro_length;
     size_t pop_drop_dist;
+    size_t dupe_dist;
     int    pop_limit;
     int    drop_limit;
     int    dupe_limit;
@@ -197,6 +198,7 @@ int ripcheck(
     ripcheck_time_t intro_length,
     ripcheck_time_t outro_length,
     ripcheck_time_t pop_drop_dist,
+    ripcheck_time_t dupe_dist,
     ripcheck_volume_t pop_limit,
     ripcheck_volume_t drop_limit,
     ripcheck_volume_t dupe_limit,

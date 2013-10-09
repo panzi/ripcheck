@@ -134,10 +134,12 @@ int ripcheck_parse_time(const char *str, ripcheck_time_t *timeptr)
         strcasecmp(endptr, "sample") || strcasecmp(endptr, "samples")) {
         timeptr->unit = RIPCHECK_SAMP;
     }
-    else if (strcasecmp(endptr, "ms") == 0 || strcasecmp(endptr, "msec") == 0) {
+    else if (strcasecmp(endptr, "ms") == 0 || strcasecmp(endptr, "msec") == 0 ||
+        strcasecmp(endptr, "millisecond") == 0 || strcasecmp(endptr, "milliseconds") == 0) {
         timeptr->unit = RIPCHECK_MSEC;
     }
-    else if (strcasecmp(endptr, "s") == 0 || strcasecmp(endptr, "sec") == 0) {
+    else if (strcasecmp(endptr, "s") == 0 || strcasecmp(endptr, "sec") == 0 ||
+        strcasecmp(endptr, "second") == 0 || strcasecmp(endptr, "seconds") == 0) {
         timeptr->unit = RIPCHECK_SEC;
     }
     else {
@@ -156,6 +158,7 @@ int ripcheck(
     ripcheck_time_t intro_length,
     ripcheck_time_t outro_length,
     ripcheck_time_t pop_drop_dist,
+    ripcheck_time_t dupe_dist,
     ripcheck_volume_t pop_limit,
     ripcheck_volume_t drop_limit,
     ripcheck_volume_t dupe_limit,
@@ -247,6 +250,7 @@ int ripcheck(
     context.intro_length  = time_to_samples(&context, intro_length);
     context.outro_length  = time_to_samples(&context, outro_length);
     context.pop_drop_dist = time_to_samples(&context, pop_drop_dist);
+    context.dupe_dist     = time_to_samples(&context, dupe_dist);
 
     callbacks->begin(callbacks->data, &context);
 
@@ -408,12 +412,13 @@ int ripcheck_data(
     const int drop_limit = context->drop_limit;
     const int dupe_limit = context->dupe_limit;
 
-    const size_t intro_end_sample   = blocks > context->intro_length ? context->intro_length          : blocks;
-    const size_t outro_start_sample = blocks > context->outro_length ? blocks - context->outro_length : 0;
-    const size_t pop_drop_dist      = context->pop_drop_dist;
-    const size_t min_dupes          = context->min_dupes;
-    const size_t window_size        = context->window_size;
-    const size_t window_shift       = (window_size - 1) * channels * sizeof(int);
+    const size_t sample_after_intro  = blocks > context->intro_length ? context->intro_length          : blocks;
+    const size_t sample_before_outro = blocks > context->outro_length ? blocks - context->outro_length : 0;
+    const size_t pop_drop_dist       = context->pop_drop_dist;
+    const size_t dupe_dist           = context->dupe_dist;
+    const size_t min_dupes           = context->min_dupes;
+    const size_t window_size         = context->window_size;
+    const size_t window_shift        = (window_size - 1) * channels * sizeof(int);
 
     memset(window,     0, sizeof(int)    * channels * window_size);
     memset(dupecounts, 0, sizeof(size_t) * channels);
@@ -484,7 +489,7 @@ int ripcheck_data(
             // (x2 ... x6) == 0, abs(x1) > pop_limit
             size_t poploc = sample - 2;
             if (x6 == 0 && x5 == 0 && x4 == 0 && x3 == 0 && (x2 > pop_limit || x2 < -pop_limit) &&
-                sample > 4 && poploc < outro_start_sample)
+                sample > 4 && poploc <= sample_before_outro)
             {
                 ++ context->bad_areas;
                 poplocs[channel] = poploc;
@@ -496,18 +501,17 @@ int ripcheck_data(
                 poploc = poplocs[channel];
             }
 
-            // look for a dropped sample, but not closer than 8 samples to the previous pop
+            // look for a dropped sample, but not closer than pop_drop_dist samples to the previous pop
             // x2 > drop_limit, x1 == 0, x0 > drop_limit
             // x2 < drop_limit, x1 == 0, x0 < drop_limit
             size_t droploc = sample - 1;
             if (x1 == 0 &&
                 ((x2 > drop_limit && x0 > drop_limit) || (x2 < -drop_limit && x0 < -drop_limit)) &&
                 droploc > poploc + pop_drop_dist &&
-                droploc > intro_end_sample &&
-                droploc < outro_start_sample)
+                droploc >= sample_after_intro &&
+                droploc <= sample_before_outro)
             {
                 ++ context->bad_areas;
-//                poplocs[channel] = droploc;
                 callbacks->possible_drop(callbacks->data, context, channel, sample, droploc);
                 if (context->bad_areas >= max_bad_areas) break;
             }
@@ -520,8 +524,9 @@ int ripcheck_data(
                 size_t dupeloc = sample - dupecounts[channel];
                 if ((x1 <= -dupe_limit || x1 >= dupe_limit) &&
                     dupecounts[channel] >= min_dupes &&
-                    dupeloc < outro_start_sample &&
-                    dupeloc > dupelocs[channel] + intro_end_sample)
+                    dupeloc <= sample_before_outro &&
+                    dupeloc >= sample_after_intro &&
+                    dupeloc > dupelocs[channel] + dupe_dist)
                 {
                     ++ context->bad_areas;
                     dupelocs[channel] = dupeloc;

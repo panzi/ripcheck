@@ -37,8 +37,9 @@ const struct option long_options[] = {
     {"pop-limit",     required_argument, 0, 'p'},
     {"drop-limit",    required_argument, 0, 'd'},
     {"dupe-limit",    required_argument, 0, 'u'},
-    {"pop-drop-dist", required_argument, 0, 's'},
-    {"min-dupes",     required_argument, 0, 'm'},
+    {"pop-drop-dist", required_argument, 0,  0 },
+    {"dupe-dist",     required_argument, 0,  0 },
+    {"min-dupes",     required_argument, 0,  0 },
     {"window-size",   required_argument, 0, 'w'},
     {0,               0,                 0,  0 }
 };
@@ -101,10 +102,12 @@ static void usage (int argc, char *argv[])
         "  -p, --pop-limit=VOLUME      set the minimum volume of a pop to VOLUME (default: 33.333 %%)\n"
         "  -d, --drop-limit=VOLUME     set the minimum volume of samples around a drop to VOLUME\n"
         "                              (default: 66.666 %%)\n"
-        "  -s, --pop-drop-dist=TIME    ignore drops before TIME after a pop (default: 8 sampels)\n"
+        "      --pop-drop-dist=TIME    ignore drops before TIME after a pop (default: 8 sampels)\n"
         "  -u, --dupe-limit=VOLUME     ignore dupes more silent than VOLUME (default: 0.033 %%)\n"
-        "  -m, --min-dupes=COUNT       set the minimum repetiton of the same sample that is\n"
+        "      --min-dupes=COUNT       set the minimum repetiton of the same sample that is\n"
         "                              recognized as a dupe to COUNT (default: 400)\n"
+        "      --dupe-dist=TIME        ignore dupes that follow closer than TIME to another dupe\n"
+        "                              (default: 1 sample)\n"
         "  -w, --window-size=COUNT     print COUNT samples when a problem is found (minimum: 7)\n"
         "                              Even if COUNT is bigger ripcheck does not use more than 7\n"
         "                              samples at a time for detecting problems. (default: 7)\n"
@@ -120,7 +123,7 @@ static void usage (int argc, char *argv[])
         "    msec, ms ....... millieseconds\n"
         "\n"
         "  VOLUME\n"
-        "    VOLUME values can be given in bit rate dependant values or percentages.\n"
+        "    VOLUME values can be given in bit rate dependant values or in percentages.\n"
         "    Examples: 32000, 33.33 %%\n"
         "\n"
         "    (node) ... bit rate dependant absolute volume\n"
@@ -137,6 +140,7 @@ int main (int argc, char *argv[])
     ripcheck_time_t intro_length  = { 5, RIPCHECK_SEC };
     ripcheck_time_t outro_length  = { 5, RIPCHECK_SEC };
     ripcheck_time_t pop_drop_dist = { 8, RIPCHECK_SAMP };
+    ripcheck_time_t dupe_dist     = { 1, RIPCHECK_SAMP };
     ripcheck_volume_t pop_limit   = { .volume.ratio = 0.33333, .unit = RIPCHECK_RATIO };
     ripcheck_volume_t drop_limit  = { .volume.ratio = 0.66666, .unit = RIPCHECK_RATIO };
     ripcheck_volume_t dupe_limit  = { .volume.ratio = 0.00033, .unit = RIPCHECK_RATIO };
@@ -157,8 +161,8 @@ int main (int argc, char *argv[])
     };
 #endif
 
-    int opt = 0;
-    while ((opt = getopt_long(argc, argv, "hvV,t:b:i:o:p:d:u:m:w:s:", long_options, NULL)) != -1)
+    int opt = 0, longindex = 0;
+    while ((opt = getopt_long(argc, argv, "hvV,t:b:i:o:p:d:u:w:", long_options, &longindex)) != -1)
     {
         switch (opt)
         {
@@ -230,20 +234,6 @@ int main (int argc, char *argv[])
                 }
                 break;
 
-            case 's':
-                if (ripcheck_parse_time(optarg, &pop_drop_dist) != 0) {
-                    fprintf(stderr, "Illegal value for --pop-drop-dist: %s\n", optarg);
-                    return 1;
-                }
-                break;
-
-            case 'm':
-                if (parse_size(optarg, &min_dupes) != 0 || min_dupes <= 1) {
-                    fprintf(stderr, "Illegal value for --min-dupes: %s\n", optarg);
-                    return 1;
-                }
-                break;
-
             case 'b':
                 if (parse_size(optarg, &max_bad_areas) != 0 || max_bad_areas == 0) {
                     fprintf(stderr, "Illegal value for --max-bad-areas: %s\n", optarg);
@@ -259,6 +249,35 @@ int main (int argc, char *argv[])
                 }
                 break;
 
+            case 0:
+                switch (longindex) {
+                    case 10:
+                        if (ripcheck_parse_time(optarg, &pop_drop_dist) != 0) {
+                            fprintf(stderr, "Illegal value for --pop-drop-dist: %s\n", optarg);
+                            return 1;
+                        }
+                        break;
+
+                    case 11:
+                        if (ripcheck_parse_time(optarg, &dupe_dist) != 0) {
+                            fprintf(stderr, "Illegal value for --dupe-dist: %s\n", optarg);
+                            return 1;
+                        }
+                        break;
+
+                    case 12:
+                        if (parse_size(optarg, &min_dupes) != 0 || min_dupes <= 1) {
+                            fprintf(stderr, "Illegal value for --min-dupes: %s\n", optarg);
+                            return 1;
+                        }
+                        break;
+
+                    default:
+                        fprintf(stderr, "See --help for usage information.\n");
+                        return 255;
+                }
+                break;
+
             default:
                 fprintf(stderr, "See --help for usage information.\n");
                 return 255;
@@ -267,7 +286,7 @@ int main (int argc, char *argv[])
 
     if (optind >= argc) {
         return ripcheck(stdin, "<stdin>", max_time, intro_length, outro_length, pop_drop_dist,
-            pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
+            dupe_dist, pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
             &callbacks) == 0 ? 0 : 1;
     }
     else {
@@ -276,7 +295,7 @@ int main (int argc, char *argv[])
 
             if (f) {
                 int errnum = ripcheck(f, argv[i], max_time, intro_length, outro_length, pop_drop_dist,
-                    pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
+                    dupe_dist, pop_limit, drop_limit, dupe_limit, min_dupes, max_bad_areas, window_size,
                     &callbacks);
                 fclose(f);
 
