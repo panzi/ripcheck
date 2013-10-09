@@ -51,15 +51,15 @@ void ripcheck_text_begin(
 	const struct ripcheck_context *context)
 {
     (void)data;
-    fprintf(stderr, "File: %s\n", context->filename);
-    fprintf(stderr, "[RIFF] (%u bytes)\n", context->riff_header.size);
-    fprintf(stderr, "[WAVEfmt ] (%u bytes)\n", context->riff_header.chunk.size);
-    fprintf(stderr, "  Audio format = %u (1 = PCM)\n", context->fmt.audio_format);
-    fprintf(stderr, "  Number of channels = %u (1 = mono, 2 = stereo)\n", context->fmt.channels);
-    fprintf(stderr, "  Sample rate = %uHz\n", context->fmt.sample_rate);
-    fprintf(stderr, "  Bytes / second = %u\n", context->fmt.byte_rate);
-    fprintf(stderr, "  Block alignment = %u\n", context->fmt.block_align);
-    fprintf(stderr, "  Bits / sample = %u\n", context->fmt.bits_per_sample);
+    printf("File: %s\n", context->filename);
+    printf("[RIFF] (%u bytes)\n", context->riff_header.size);
+    printf("[WAVEfmt ] (%u bytes)\n", context->riff_header.chunk.size);
+    printf("  Audio format = %u (1 = PCM)\n", context->fmt.audio_format);
+    printf("  Number of channels = %u (1 = mono, 2 = stereo)\n", context->fmt.channels);
+    printf("  Sample rate = %uHz\n", context->fmt.sample_rate);
+    printf("  Bytes / second = %u\n", context->fmt.byte_rate);
+    printf("  Block alignment = %u\n", context->fmt.block_align);
+    printf("  Bits / sample = %u\n", context->fmt.bits_per_sample);
 }
 
 void ripcheck_text_sample_data(
@@ -69,8 +69,8 @@ void ripcheck_text_sample_data(
 {
     (void)data;
     double duration = (double)data_size / context->fmt.byte_rate;
-    fprintf(stderr, "  Data size = %u bytes\n", data_size);
-    fprintf(stderr, "  Duration = %g sec\n", duration);
+    printf("  Data size = %u bytes\n", data_size);
+    printf("  Duration = %g sec\n", duration);
 }
 
 void ripcheck_text_possible_pop(
