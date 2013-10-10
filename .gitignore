@@ -9,3 +9,4 @@ contrib/libpng-1.2.*-bin.zip
 contrib/libpng12.dll
 ripcheck-*/
 ripcheck-*.zip
+config.sh
