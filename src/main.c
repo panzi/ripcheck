@@ -151,7 +151,7 @@ int main (int argc, char *argv[])
 
 #ifdef WITH_VISUALIZE
     struct ripcheck_image_options image_options = {
-        .sample_width   = 20,
+        .sample_width   =  5,
         .sample_height  = 50,
         .bg_color       = { 255, 255, 255 },
         .wave_color     = {  32, 132, 255 },
