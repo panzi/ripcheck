@@ -143,12 +143,14 @@ typedef void (*ripcheck_sample_data_t)(
 typedef void (*ripcheck_possible_pop_t)(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample);
 
 typedef void (*ripcheck_possible_drop_t)(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample,
     size_t       droped_sample);
@@ -156,6 +158,7 @@ typedef void (*ripcheck_possible_drop_t)(
 typedef void (*ripcheck_dupes_t)(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample);
 

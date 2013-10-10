@@ -21,26 +21,42 @@
 #include "ripcheck.h"
 
 void ripcheck_print_event(
-    const struct ripcheck_context *context, const char *what, uint16_t channel,
+    const struct ripcheck_context *context, size_t window_offset,
+    const char *what, uint16_t channel,
     size_t last_window_sample, size_t first_error_sample, size_t last_error_sample)
 {
-    double time = (1000.0L * first_error_sample) / context->fmt.sample_rate;
+    const double time = (1000.0L * first_error_sample) / context->fmt.sample_rate;
     if (first_error_sample == last_error_sample) {
-        printf("%s: sample = %"PRIzu" (time = %g ms)", what, first_error_sample, time);
+        printf("%s: sample = %"PRIzu", time = %g ms", what, first_error_sample, time);
     }
     else {
-        double end_time = (1000.0L * last_error_sample) / context->fmt.sample_rate;
+        const double end_time = (1000.0L * last_error_sample) / context->fmt.sample_rate;
         printf("%s: samples = %"PRIzu" ... %"PRIzu" (%"PRIzu" samples, time = %g ms ... %g ms)",
             what, first_error_sample, last_error_sample, last_error_sample - first_error_sample + 1,
             time, end_time);
     }
-    printf(", channel = %u, samples[%"PRIzu" ... %"PRIzu"] = {", channel,
-        last_window_sample - context->window_size + 1, last_window_sample);
 
-    for (size_t i = context->window_size; i > 0;) {
-        -- i;
-        printf("%d", context->window[context->fmt.channels * i + channel]);
-        if (i > 0) printf(", ");
+    const size_t channels = context->fmt.channels;
+    const size_t window_ints = context->window_size * channels;
+    const size_t samples = last_window_sample >= context->window_size ?
+        context->window_size : last_window_sample + 1;
+    
+    printf(", channel = %u, samples[%"PRIzu" ... %"PRIzu"] = {", channel,
+        last_window_sample - samples + 1, last_window_sample);
+
+    const size_t offset = (window_offset + channel + channels +
+        (context->window_size - samples) * channels) % window_ints;
+    int first = 1;
+    for (size_t window_sample = 0; window_sample < samples; ++ window_sample)
+    {
+        const size_t i = (offset + window_sample * channels) % window_ints;
+        if (first) {
+            first = 0;
+            printf("%d", context->window[i]);
+        }
+        else {
+            printf(", %d", context->window[i]);
+        }
     }
 
     printf("}\n");
@@ -76,35 +92,38 @@ void ripcheck_text_sample_data(
 void ripcheck_text_possible_pop(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample)
 {
     (void)data;
-    ripcheck_print_event(context, "pop", channel, last_window_sample,
+    ripcheck_print_event(context, window_offset, "pop", channel, last_window_sample,
         context->poplocs[channel],  context->poplocs[channel]);
 }
 
 void ripcheck_text_possible_drop(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample,
     size_t       droped_sample)
 {
     (void)data;
-    ripcheck_print_event(context, "drop", channel, last_window_sample,
-    droped_sample, droped_sample);
+    ripcheck_print_event(context, window_offset, "drop", channel, last_window_sample,
+        droped_sample, droped_sample);
 }
 
 void ripcheck_text_dupes(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample)
 {
     (void)data;
-    ripcheck_print_event(context, "dupes", channel, last_window_sample,
-    context->dupelocs[channel], context->dupelocs[channel] + context->dupecounts[channel] - 1);
+    ripcheck_print_event(context, window_offset, "dupes", channel, last_window_sample,
+        context->dupelocs[channel], context->dupelocs[channel] + context->dupecounts[channel] - 1);
 }
 
 void ripcheck_text_complete(

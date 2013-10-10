@@ -107,7 +107,7 @@ static void write_image(const char *filename, png_bytep *img, size_t width, size
 
     png_init_io(png, fp);
 
-    // Write header (8 bit colour depth)
+    // write header (8 bit color depth)
     png_set_IHDR(png, info, width, height,
         8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
         PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
@@ -138,6 +138,7 @@ static const char *basename(const char *path)
 static void print_image(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     const char  *what,
     uint16_t     channel,
     size_t last_window_sample,
@@ -152,9 +153,14 @@ static void print_image(
     const size_t sample_height = image_options->sample_height;
     const size_t sample_width  = image_options->sample_width;
 
+    const size_t channels = context->fmt.channels;
+    const size_t window_ints = context->window_size * channels;
+    const size_t samples = last_window_sample >= context->window_size ?
+        context->window_size : last_window_sample + 1;
+
     const size_t zero   = sample_height + 1;
     const size_t height = sample_height * 2 + 1;
-    const size_t width  = sample_width * context->window_size;
+    const size_t width  = sample_width * samples;
     const int max_value = ~(~0 << (context->fmt.bits_per_sample - 1));
 
     snprintf(filename, PATH_MAX, "%s_sample_%"PRIzu"_channel_%u_%s.png",
@@ -169,13 +175,16 @@ static void print_image(
 
     fill_rect(img, 0, 0, width - 1, height - 1, image_options->bg_color);
 
-    const size_t mark_start = last_window_sample - last_error_sample;
-    const size_t mark_end   = last_window_sample - first_error_sample;
-    for (size_t i = context->window_size; i > 0;) {
-        size_t x = (context->window_size - i) * sample_width;
-        int val = context->window[context->fmt.channels * --i + channel] * (int)sample_height / max_value;
+    const size_t offset = (window_offset + channel + channels +
+        (context->window_size - samples) * channels) % window_ints;
+    for (size_t window_sample = 0; window_sample < samples; ++ window_sample)
+    {
+        const size_t i = (offset + window_sample * channels) % window_ints;
+        const size_t x = window_sample * sample_width;
+        const size_t sample = last_window_sample - samples + 1 + window_sample;
+        int val = context->window[i] * (int)sample_height / max_value;
         uint8_t *color;
-        if (i >= mark_start && i <= mark_end) {
+        if (sample >= first_error_sample && sample <= last_error_sample) {
             color = image_options->error_color;
             fill_rect(img, x, 0, x + sample_width - 1, height - 1, image_options->error_bg_color);
         }
@@ -381,33 +390,38 @@ int ripcheck_parse_image_options(const char *str, struct ripcheck_image_options 
 void ripcheck_image_possible_pop(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample)
 {
-    ripcheck_text_possible_pop(data, context, channel, last_window_sample);
-    print_image(data, context, "pop", channel, last_window_sample,
+    ripcheck_text_possible_pop(data, context, window_offset, channel, last_window_sample);
+    print_image(data, context, window_offset, "pop", channel, last_window_sample,
         context->poplocs[channel], context->poplocs[channel]);
 }
 
 void ripcheck_image_possible_drop(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample,
     size_t       droped_sample)
 {
-    ripcheck_text_possible_drop(data, context, channel, last_window_sample, droped_sample);
-    print_image(data, context, "drop", channel, last_window_sample, droped_sample, droped_sample);
+    ripcheck_text_possible_drop(data, context, window_offset, channel,
+        last_window_sample, droped_sample);
+    print_image(data, context, window_offset, "drop", channel,
+        last_window_sample, droped_sample, droped_sample);
 }
 
 void ripcheck_image_dupes(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample)
 {
-    ripcheck_text_dupes(data, context, channel, last_window_sample);
-    print_image(data, context, "dupes", channel, last_window_sample,
+    ripcheck_text_dupes(data, context, window_offset, channel, last_window_sample);
+    print_image(data, context, window_offset, "dupes", channel, last_window_sample,
     context->dupelocs[channel], context->dupelocs[channel] + context->dupecounts[channel] - 1);
 }
 

@@ -418,9 +418,9 @@ int ripcheck_data(
     const size_t dupe_dist           = context->dupe_dist;
     const size_t min_dupes           = context->min_dupes;
     const size_t window_size         = context->window_size;
-    const size_t window_shift        = (window_size - 1) * channels * sizeof(int);
+    const size_t window_ints         = window_size * channels;
 
-    memset(window,     0, sizeof(int)    * channels * window_size);
+    memset(window,     0, sizeof(int)    * window_ints);
     memset(dupecounts, 0, sizeof(size_t) * channels);
     memset(poplocs,    0, sizeof(size_t) * channels);
     memset(dupelocs,   0, sizeof(size_t) * channels);
@@ -434,6 +434,15 @@ int ripcheck_data(
             "The size of the 'data' chunk (%u) is not a multiple of the block alignment (%u).",
             size, block_align);
     }
+
+    // sample indices in window
+    size_t i0 = 0;
+    size_t i1 = 0;
+    size_t i2 = 0;
+    size_t i3 = 0;
+    size_t i4 = 0;
+    size_t i5 = 0;
+    size_t i6 = 0;
 
     for (size_t sample = 0; sample < max_sample; ++ sample)
     {
@@ -449,10 +458,13 @@ int ripcheck_data(
         {
             // http://www.neurophys.wisc.edu/auditory/riff-format.txt
             // http://home.roadrunner.com/~jgglatt/tech/wave.htm#POINTS
-            //
-            // 1 to 8 bits are unsigned
-            // 9 and more bits are signed
             int x0 = 0;
+            int x1 = window[i1 + channel];
+            int x2 = window[i2 + channel];
+            int x3 = window[i3 + channel];
+            int x4 = window[i4 + channel];
+            int x5 = window[i5 + channel];
+            int x6 = window[i6 + channel];
 
             // I guess that this *might* be a performance drain:
             for (size_t byte = 0; byte < bytes_per_sample; ++ byte)
@@ -463,27 +475,23 @@ int ripcheck_data(
             // shift away padding
             x0 >>= shift;
 
+            // 1 to 8 bits are unsigned
+            // 9 and more bits are signed
             if (bits_per_sample > 8)
             {
                 if (x0 & mid) { // negative
-                    window[channel] = x0 = x0 | mask;
+                    window[i0 + channel] = x0 = x0 | mask;
                 }
                 else { // positive
-                    window[channel] = x0;
+                    window[i0 + channel] = x0;
                 }
             }
             else
             {
-                window[channel] = x0 = x0 - mid;
+                window[i0 + channel] = x0 = x0 - mid;
             }
 
             // analyze audio per channel
-            int x1 = window[channels * 1 + channel];
-            int x2 = window[channels * 2 + channel];
-            int x3 = window[channels * 3 + channel];
-            int x4 = window[channels * 4 + channel];
-            int x5 = window[channels * 5 + channel];
-            int x6 = window[channels * 6 + channel];
 
             // look for a pop
             // (x2 ... x6) == 0, abs(x1) > pop_limit
@@ -493,7 +501,7 @@ int ripcheck_data(
             {
                 ++ context->bad_areas;
                 poplocs[channel] = poploc;
-                callbacks->possible_pop(callbacks->data, context, channel, sample);
+                callbacks->possible_pop(callbacks->data, context, i0, channel, sample);
                 if (context->bad_areas >= max_bad_areas) break;
             }
             else
@@ -512,7 +520,7 @@ int ripcheck_data(
                 droploc <= sample_before_outro)
             {
                 ++ context->bad_areas;
-                callbacks->possible_drop(callbacks->data, context, channel, sample, droploc);
+                callbacks->possible_drop(callbacks->data, context, i0, channel, sample, droploc);
                 if (context->bad_areas >= max_bad_areas) break;
             }
 
@@ -530,7 +538,7 @@ int ripcheck_data(
                 {
                     ++ context->bad_areas;
                     dupelocs[channel] = dupeloc;
-                    callbacks->dupes(callbacks->data, context, channel, sample);
+                    callbacks->dupes(callbacks->data, context, i0, channel, sample);
                     if (context->bad_areas >= max_bad_areas) break;
                 }
                 dupecounts[channel] = 0;
@@ -538,8 +546,13 @@ int ripcheck_data(
         }
 
         // shift the window
-        // TODO: make window a ring buffer to increase speed for big window sizes?
-        memmove(window + channels, window, window_shift);
+        i6 = i5;
+        i5 = i4;
+        i4 = i3;
+        i3 = i2;
+        i2 = i1;
+        i1 = i0;
+        i0 = (i0 + channels) % window_ints;
     }
 
     return 0;

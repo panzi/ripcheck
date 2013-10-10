@@ -41,12 +41,15 @@ else()
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-	# Update if necessary
-	if(CMAKE_COMPILER_IS_MINGW64)
-		# can't be pedantic because of format strings
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -std=gnu99 -O2")
-	else()
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -Werror -std=gnu99 -O2")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -std=gnu99")
+
+	if(NOT(CMAKE_BUILD_TYPE STREQUAL "Debug"))
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+	endif()
+
+	if(NOT(CMAKE_COMPILER_IS_MINGW64))
+		# can't be pedantic for mingw64 because of format strings
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic")
 	endif()
 endif()
 

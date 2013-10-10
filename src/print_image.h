@@ -38,12 +38,14 @@ int ripcheck_parse_image_options(
 void ripcheck_image_possible_pop(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample);
 
 void ripcheck_image_possible_drop(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample,
     size_t       droped_sample);
@@ -51,6 +53,7 @@ void ripcheck_image_possible_drop(
 void ripcheck_image_dupes(
     void        *data,
     const struct ripcheck_context *context,
+    size_t       window_offset,
     uint16_t     channel,
     size_t       last_window_sample);
 

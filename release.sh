@@ -26,8 +26,8 @@ for arch in linux64 linux32 mingw32 mingw64; do
 	echo "================================================================================"
 	echo "BUILDING $realarch"
 	echo "================================================================================"
-	cmake_args="-DCMAKE_TOOLCHAIN_FILE=`readlink -f contrib/toolchain-$arch.cmake`"
-	if [ "$MINGW64_PATH" != "" ]; then
+	cmake_args="-DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=`readlink -f contrib/toolchain-$arch.cmake`"
+	if [ "$MINGW64_PATH" != "" -a "$arch" = "mingw64" ]; then
 		cmake_args="$cmake_args -DMINGW64_PATH=$MINGW64_PATH"
 	fi
 	case "$realarch" in
