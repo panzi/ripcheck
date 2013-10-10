@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ -f ./config.sh ]; then
+	. ./config.sh
+fi
+
 version_major=`grep '#define RIPCHECK_VERSION_MAJOR' src/ripcheck.h|sed 's/^.* \([0-9]\+\)$/\1/'`
 version_minor=`grep '#define RIPCHECK_VERSION_MINOR' src/ripcheck.h|sed 's/^.* \([0-9]\+\)$/\1/'`
 version_patch=`grep '#define RIPCHECK_VERSION_PATCH' src/ripcheck.h|sed 's/^.* \([0-9]\+\)$/\1/'`
