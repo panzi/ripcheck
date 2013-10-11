@@ -109,39 +109,62 @@ Only PCM WAV files are supported.
 
 ### Options
 
-    -h, --help                  print this help message
-    -v, --version               print version information
-    -V, --visualize[=PARAMS]    print wave forms around found problems to PNG images
-                                PARAMS is a comma separated list of key-value pairs that
-                                define the size and color of the generated images.
-
-                                samp-width=PIXELS      width of a sample (default: 20)
-                                samp-height=PIXELS     height of a samle above the zero line
-                                                       (default: 50)
-                                bg-color=COLOR         background color (default: #FFFFFF)
-                                wave-color=COLOR       color of the wave form (default: #2084FF)
-                                zero-color=COLOR       color of the zero line (default: #7F7F7F)
-                                error-color=COLOR      color of the error sample (default: #FF2020)
-                                error-bg-color=COLOR   background color of the error sample
-                                                       (default: #FFC440)
-
-                                COLOR may be a HTML like hexadecimal color string (e.g. #FFFFFF)
-                                or one of the 16 defined HTML color names (e.g. white).
-
-    -t, --max-time=TIME         stop analyzing at TIME
-    -b, --max-bad-areas=COUNT   stop analyzing after COUNT problems found
-    -i, --intro-length=TIME     start analyzing at TIME (default: 5 sec)
-    -o, --outro-length=TIME     stop analyzing at TIME before end (default: 5 sec)
-    -p, --pop-limit=VOLUME      set the minimum volume of a pop to VOLUME (default: 33.333 %)
-    -d, --drop-limit=VOLUME     set the minimum volume of samples around a drop to VOLUME
-                                (default: 66.666 %)
-    -s, --pop-drop-dist=TIME    ignore drops before TIME after a pop (default: 8 sampels)
-    -u, --dupe-limit=VOLUME     ignore dupes more silent than VOLUME (default: 0.033 %)
-    -m, --min-dupes=COUNT       set the minimum repetiton of the same sample that is
-                                recognized as a dupe to COUNT (default: 400)
-    -w, --window-size=COUNT     print COUNT samples when a problem is found (minimum: 7)
-                                Even if COUNT is bigger ripcheck does not use more than 7
-                                samples at a time for detecting problems. (default: 7)
+	-h, --help                    print this help message
+	-v, --version                 print version information
+	-V, --visualize[=PARAMS]      print wave forms around found problems to PNG images
+	                              PARAMS is a comma separated list of key-value pairs that
+	                              define the size and color of the generated images.
+	
+	                              samp-width=PIXELS      width of a sample (default: 20)
+	                              samp-height=PIXELS     height of a samle above the zero line
+	                                                     (default: 50)
+	                              bg-color=COLOR         background color (default: #FFFFFF)
+	                              wave-color=COLOR       color of the wave form (default: #2084FF)
+	                              zero-color=COLOR       color of the zero line (default: #7F7F7F)
+	                              error-color=COLOR      color of the error sample (default: #FF2020)
+	                              error-bg-color=COLOR   background color of the error sample
+	                                                     (default: #FFC440)
+	
+	                              COLOR may be a HTML like hexadecimal color string (e.g. #FFFFFF)
+	                              or one of the 16 defined HTML color names (e.g. white).
+	
+	    --image-filename=PATTERN  use PATTERN for the names of the generated image files
+	                              Patterns can reference certain variables using {VARNAME}.
+	                              In order to put a { or }} in the resulting filename write {{ or }}.
+	
+	                              errorname           'pop', 'drop' or 'dupes'
+	                              filename            name of the WAV file without path
+	                              basename            name of the WAV file without path or extension
+	                              filepath            path of the WAV file
+	                              dirname             path of the directory of the WAV file
+	                              channel             channel in which the error happened
+	                              first_error_sample  first sample in this error
+	                              last_error_sample   last sample in this error
+	                              error_samples       number of samples in this error
+	                              first_window_sample first sample in current window
+	                              last_window_sample  last sample in current window
+	                              window_size         number of samples in window
+	
+	                              If the error happened at the very beginning of the WAV file then
+	                              window_size might be bigger than what last_window_sample and
+	                              first_window_sample imply.
+	
+	-t, --max-time=TIME           stop analyzing at TIME
+	-b, --max-bad-areas=COUNT     stop analyzing after COUNT problems found
+	-i, --intro-length=TIME       start analyzing at TIME (default: 5 sec)
+	-o, --outro-length=TIME       stop analyzing at TIME before end (default: 5 sec)
+	-p, --pop-limit=VOLUME        set the minimum volume of a pop to VOLUME (default: 33.333 %)
+	-d, --drop-limit=VOLUME       set the minimum volume of samples around a drop to VOLUME
+	                              (default: 66.666 %)
+	    --pop-drop-dist=TIME      ignore drops before TIME after a pop (default: 8 sampels)
+	-u, --dupe-limit=VOLUME       ignore dupes more silent than VOLUME (default: 0.033 %)
+	    --min-dupes=COUNT         set the minimum repetiton of the same sample that is
+	                              recognized as a dupe to COUNT (default: 400)
+	    --dupe-dist=TIME          ignore dupes that follow closer than TIME to another dupe
+	                              (default: 1 sample)
+	-w, --window-size=COUNT       print COUNT samples when a problem is found (minimum: 7)
+	                              Even if COUNT is bigger ripcheck does not use more than 7
+	                              samples at a time for detecting problems. (default: 7)
 
 ### Units
 
