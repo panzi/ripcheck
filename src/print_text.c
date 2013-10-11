@@ -68,8 +68,8 @@ void ripcheck_text_begin(
 {
     (void)data;
     printf("File: %s\n", context->filename);
-    printf("[RIFF] (%u bytes)\n", context->riff_header.size);
-    printf("[WAVEfmt ] (%u bytes)\n", context->riff_header.chunk.size);
+    printf("[RIFF WAVE] %u bytes\n", context->riff_header.size);
+    printf("[fmt ] %u bytes\n", context->riff_header.chunk.size);
     printf("  Audio format = %u (1 = PCM)\n", context->fmt.audio_format);
     printf("  Number of channels = %u (1 = mono, 2 = stereo)\n", context->fmt.channels);
     printf("  Sample rate = %uHz\n", context->fmt.sample_rate);
@@ -84,8 +84,8 @@ void ripcheck_text_sample_data(
     uint32_t data_size)
 {
     (void)data;
-    double duration = (double)data_size / context->fmt.byte_rate;
-    printf("  Data size = %u bytes\n", data_size);
+    const double duration = (double)data_size / context->fmt.byte_rate;
+    printf("[data] %u bytes\n", data_size);
     printf("  Duration = %g sec\n", duration);
 }
 
@@ -133,6 +133,9 @@ void ripcheck_text_complete(
     (void)data;
     if (context->bad_areas == 0) {
         printf("done: all ok\n");
+    }
+    else if (context->bad_areas == 1) {
+        printf("done: 1 bad area found\n");
     }
     else {
         printf("done: %"PRIzu" bad areas found\n", context->bad_areas);
