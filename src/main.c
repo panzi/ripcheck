@@ -279,7 +279,9 @@ int main (int argc, char *argv[])
 
                     case 14:
 #ifdef WITH_VISUALIZE
-                        // TODO: validate format string now
+                        if (ripcheck_validate_image_filename_format(optarg) != 0) {
+                            return 1;
+                        }
                         image_options.filename = optarg;
                         break;
 #else

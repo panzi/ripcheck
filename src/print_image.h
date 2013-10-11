@@ -32,6 +32,9 @@ struct ripcheck_image_options {
     const char *filename;
 };
 
+int ripcheck_validate_image_filename_format(
+    const char *format);
+
 int ripcheck_parse_image_options(
     const char *str,
     struct ripcheck_image_options *image_options);

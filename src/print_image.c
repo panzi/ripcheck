@@ -24,6 +24,7 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <stdarg.h>
 #include <png.h>
 
 #ifndef HAVE_STRLCPY
@@ -591,6 +592,89 @@ static size_t format_image_filename(
     }
 
     return n;
+}
+
+static void print_format_error(const char *format, size_t errpos, const char *msg, ...)
+{
+    va_list ap;
+    fprintf(stderr, "error: illegal image filename format\n%s\n", format);
+    for (size_t i = 0; i < errpos; ++ i) {
+        fprintf(stderr, "-");
+    }
+    fprintf(stderr, "^\n");
+    va_start(ap, msg);
+    vfprintf(stderr, msg, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+}
+
+int ripcheck_validate_image_filename_format(const char *format)
+{
+    const char *from = format;
+    const char *to   = NULL;
+
+    while (*from) {
+        to = from;
+        // search varname start
+        while (*to && *to != '{' && *to != '}') ++ to;
+
+        if (*to == '{') {
+            if (to[1] == '{') {
+                // "{{"
+                from = to + 2;
+            }
+            else {
+                // "{varname}"
+                from = to = to + 1;
+                // search varname end
+                while (*to && *to != '{' && *to != '}') ++ to;
+
+                if (*to == '}') {
+                    size_t keylen = to - from;
+                    struct filename_format_var *fmtvar = filename_format_vars;
+
+                    for (; fmtvar->name; ++ fmtvar)
+                    {
+                        if (strncmp(from, fmtvar->name, keylen) == 0)
+                            break;
+                    }
+
+                    if (fmtvar->name) {
+                        // print format
+                        from = to + 1;
+                    }
+                    else {
+                        print_format_error(format, from - format, "unknown variable name: %.*s", keylen, from);
+                        return EINVAL;
+                    }
+                }
+                else if (*to == '{') {
+                    print_format_error(format, to - format, "illegal character in variable name: '{'");
+                    return EINVAL;
+                }
+                else {
+                    print_format_error(format, from - format, "unterminated variable name");
+                    return EINVAL;
+                }
+            }
+        }
+        else if (*to == '}') {
+            if (to[1] == '}') {
+                // "}}"
+                from = to + 2;
+            }
+            else {
+                print_format_error(format, to - format, "illegal lone '}'");
+                return EINVAL;
+            }
+        }
+        else {
+            // end of string
+            from = to;
+        }
+    }
+
+    return 0;
 }
 
 static void print_image(
