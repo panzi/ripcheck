@@ -21,9 +21,14 @@
 
 #include <limits.h>
 #include <errno.h>
+#include <string.h>
 #include <strings.h>
 #include <ctype.h>
 #include <png.h>
+
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char * dst, const char * src, size_t size);
+#endif
 
 static png_bytep *alloc_image(size_t width, size_t height)
 {
@@ -135,6 +140,459 @@ static const char *basename(const char *path)
     return ptr ? ptr + 1 : path;
 }
 
+typedef size_t (*filename_formatter_t)(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample);
+
+static size_t format_errorname(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)context;
+    (void)window_offset;
+    (void)channel;
+    (void)last_window_sample;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    return strlcpy(str, what, size);
+}
+
+static size_t format_filename(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    return strlcpy(str, basename(context->filename), size);
+}
+
+static size_t format_filepath(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    return strlcpy(str, context->filename, size);
+}
+
+static size_t format_basename(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    if (size == 0)
+        return 0;
+
+    const char *name = basename(context->filename);
+    const char *ptr = strrchr(name, '.');
+    if (ptr && ptr != name) {
+        const size_t n = ptr - name;
+        const size_t m = n < size ? n : size - 1;
+        memcpy(str, name, m);
+        str[m] = 0;
+        return n;
+    }
+    return strlcpy(str, name, size);
+}
+
+static size_t format_dirname(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    const char *name = basename(context->filename);
+
+    if (name == context->filename)
+        return 0;
+
+    size_t n = name - context->filename + 1; // + 1 for NUL
+    return strlcpy(str, context->filename, n < size ? n : size);
+}
+
+static size_t format_channel(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)window_offset;
+    (void)context;
+    (void)what;
+    (void)last_window_sample;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    int n = snprintf(str, size, "%u", channel);
+    return n < 0 ? 0 : n;
+}
+
+static size_t format_first_error_sample(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)context;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+    (void)last_error_sample;
+
+    int n = snprintf(str, size, "%"PRIzu, first_error_sample);
+    return n < 0 ? 0 : n;
+}
+
+static size_t format_last_error_sample(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)context;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+    (void)first_error_sample;
+
+    int n = snprintf(str, size, "%"PRIzu, last_error_sample);
+    return n < 0 ? 0 : n;
+}
+
+static size_t format_error_samples(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)context;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+
+    int n = snprintf(str, size, "%"PRIzu, last_error_sample - first_error_sample + 1);
+    return n < 0 ? 0 : n;
+}
+
+static size_t format_first_window_sample(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    const size_t first_window_sample =
+        context->window_size >= last_window_sample ?
+        last_window_sample - context->window_size : 0;
+    const int n = snprintf(str, size, "%"PRIzu, first_window_sample);
+    return n < 0 ? 0 : n;
+}
+
+static size_t format_last_window_sample(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)context;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    int n = snprintf(str, size, "%"PRIzu, last_window_sample);
+    return n < 0 ? 0 : n;
+}
+
+static size_t format_window_size(
+    char  *str,
+    size_t size,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    (void)image_options;
+    (void)window_offset;
+    (void)what;
+    (void)channel;
+    (void)last_window_sample;
+    (void)first_error_sample;
+    (void)last_error_sample;
+
+    int n = snprintf(str, size, "%"PRIzu, context->window_size);
+    return n < 0 ? 0 : n;
+}
+
+struct filename_format_var {
+    const char          *name;
+    filename_formatter_t formatter;
+};
+
+static struct filename_format_var filename_format_vars[] = {
+    {"errorname",           format_errorname},
+    {"filename",            format_filename},
+    {"filepath",            format_filepath},
+    {"basename",            format_basename},
+    {"dirname",             format_dirname},
+    {"channel",             format_channel},
+    {"first_error_sample",  format_first_error_sample},
+    {"last_error_sample",   format_last_error_sample},
+    {"error_samples",       format_error_samples},
+    {"first_window_sample", format_first_window_sample},
+    {"last_window_sample",  format_last_window_sample},
+    {"window_size",         format_window_size},
+    {0, 0}
+};
+
+static size_t format_image_filename(
+    char        *str,
+    size_t       size,
+    const char  *format,
+    const struct ripcheck_image_options *image_options,
+    const struct ripcheck_context       *context,
+    size_t       window_offset,
+    const char  *what,
+    uint16_t     channel,
+    size_t last_window_sample,
+    size_t first_error_sample,
+    size_t last_error_sample)
+{
+    size_t n = 0;
+    const char *from = format;
+    const char *to   = NULL;
+    
+    while (*from) {
+        to = from;
+        // search varname start
+        while (*to && *to != '{' && *to != '}') ++ to;
+
+        if (from != to) {
+            // non-format
+            size_t slice = to - from;
+            if (n < size) {
+                size_t rem = size - n;
+                size_t len = rem <= slice ? rem - 1 : slice;
+                memcpy(str + n, from, len);
+                str[n + len] = 0;
+            }
+            n += slice;
+        }
+
+        if (*to == '{') {
+            if (to[1] == '{') {
+                // "{{"
+                if (n + 1 < size) {
+                    str[n]     = '{';
+                    str[n + 1] = 0;
+                }
+                ++ n;
+                from = to + 2;
+            }
+            else {
+                // "{varname}"
+                from = to = to + 1;
+                // search varname end
+                while (*to && *to != '{' && *to != '}') ++ to;
+                
+                if (*to == '}') {
+                    size_t keylen = to - from;
+                    struct filename_format_var *fmtvar = filename_format_vars;
+
+                    for (; fmtvar->name; ++ fmtvar)
+                    {
+                        if (strncmp(from, fmtvar->name, keylen) == 0)
+                            break;
+                    }
+
+                    if (fmtvar->name) {
+                        // print format
+                        n += fmtvar->formatter(
+                            str + n, size >= n ? size - n : 0, image_options, context,  window_offset, what,
+                            channel, last_window_sample, first_error_sample, last_error_sample);
+                        from = to + 1;
+                    }
+                    else {
+                        // ignore unknown var name
+                        size_t slice = keylen + 2;
+                        if (n < size) {
+                            size_t rem = size - n;
+                            size_t len = rem <= slice ? rem - 1 : slice;
+                            memcpy(str + n, from - 1, len);
+                            str[n + len] = 0;
+                        }
+                        n += slice;
+                        from = to + 1;
+                    }
+                }
+                else {
+                    // ignore error "{...{" or "{..."$
+                    size_t slice = to - --from;
+                    if (n < size) {
+                        size_t rem = size - n;
+                        size_t len = rem <= slice ? rem - 1 : slice;
+                        memcpy(str + n, from, len);
+                        str[n + len] = 0;
+                    }
+                    n += slice;
+                    from = to;
+                }
+            }
+        }
+        else if (*to == '}') {
+            if (n + 1 < size) {
+                str[n]     = '}';
+                str[n + 1] = 0;
+            }
+            ++ n;
+            if (to[1] == '}') {
+                // "}}"
+                from = to + 2;
+            }
+            else {
+                // ignore error "}..."
+                from = to + 1;
+            }
+        }
+        else {
+            // end of string
+            from = to;
+        }
+    }
+
+    return n;
+}
+
 static void print_image(
     void        *data,
     const struct ripcheck_context *context,
@@ -163,8 +621,18 @@ static void print_image(
     const size_t width  = sample_width * samples;
     const int max_value = ~(~0 << (context->fmt.bits_per_sample - 1));
 
+/*
     snprintf(filename, PATH_MAX, "%s_sample_%"PRIzu"_channel_%u_%s.png",
         basename(context->filename), first_error_sample, channel, what);
+*/
+
+    size_t namelen = format_image_filename(filename, PATH_MAX, image_options->filename, image_options,
+        context, window_offset, what, channel, last_window_sample, first_error_sample, last_error_sample);
+
+    if (namelen >= PATH_MAX) {
+        fprintf(stderr, "error: image file name too long\n");
+        return;
+    }
 
     png_bytep *img = alloc_image(width, height);
 

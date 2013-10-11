@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.0)
 
 project(ripcheck)
 
+include(CheckFunctionExists)
+
+check_function_exists(strlcpy HAVE_STRLCPY)
+
 find_package(PkgConfig)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

@@ -27,21 +27,22 @@
 #endif
 
 const struct option long_options[] = {
-    {"help",          no_argument,       0, 'h'},
-    {"version",       no_argument,       0, 'v'},
-    {"visualize",     optional_argument, 0, 'V'},
-    {"max-time",      required_argument, 0, 't'},
-    {"max-bad-areas", required_argument, 0, 'b'},
-    {"intro-length",  required_argument, 0, 'i'},
-    {"outro-length",  required_argument, 0, 'o'},
-    {"pop-limit",     required_argument, 0, 'p'},
-    {"drop-limit",    required_argument, 0, 'd'},
-    {"dupe-limit",    required_argument, 0, 'u'},
-    {"pop-drop-dist", required_argument, 0,  0 },
-    {"dupe-dist",     required_argument, 0,  0 },
-    {"min-dupes",     required_argument, 0,  0 },
-    {"window-size",   required_argument, 0, 'w'},
-    {0,               0,                 0,  0 }
+    {"help",           no_argument,       0, 'h'},
+    {"version",        no_argument,       0, 'v'},
+    {"visualize",      optional_argument, 0, 'V'},
+    {"max-time",       required_argument, 0, 't'},
+    {"max-bad-areas",  required_argument, 0, 'b'},
+    {"intro-length",   required_argument, 0, 'i'},
+    {"outro-length",   required_argument, 0, 'o'},
+    {"pop-limit",      required_argument, 0, 'p'},
+    {"drop-limit",     required_argument, 0, 'd'},
+    {"dupe-limit",     required_argument, 0, 'u'},
+    {"pop-drop-dist",  required_argument, 0,  0 },
+    {"dupe-dist",      required_argument, 0,  0 },
+    {"min-dupes",      required_argument, 0,  0 },
+    {"window-size",    required_argument, 0, 'w'},
+    {"image-filename", required_argument, 0,  0 },
+    {0,                0,                 0,  0 }
 };
 
 static int parse_size(const char *str, size_t *size)
@@ -93,6 +94,9 @@ static void usage (int argc, char *argv[])
         "\n"
         "                              COLOR may be a HTML like hexadecimal color string (e.g. #FFFFFF)\n"
         "                              or one of the 16 defined HTML color names (e.g. white).\n"
+        "\n"
+        "      --image-filename=PATTERN\n"
+        "                              TODO\n"
         "\n"
 #endif
         "  -t, --max-time=TIME         stop analyzing at TIME\n"
@@ -157,7 +161,8 @@ int main (int argc, char *argv[])
         .wave_color     = {  32, 132, 255 },
         .zero_color     = { 127, 127, 127 },
         .error_color    = { 255,  32,  32 },
-        .error_bg_color = { 255, 196,  64 }
+        .error_bg_color = { 255, 196,  64 },
+        .filename       = "{basename}_sample_{first_error_sample}_channel_{channel}_{errorname}.png"
     };
 #endif
 
@@ -271,6 +276,16 @@ int main (int argc, char *argv[])
                             return 1;
                         }
                         break;
+
+                    case 14:
+#ifdef WITH_VISUALIZE
+                        // TODO: validate format string now
+                        image_options.filename = optarg;
+                        break;
+#else
+                        fprintf(stderr,"Not compiled with support for writing images.\n");
+                        return 1;
+#endif
 
                     default:
                         fprintf(stderr, "See --help for usage information.\n");

@@ -29,6 +29,7 @@ struct ripcheck_image_options {
     uint8_t zero_color[3];
     uint8_t error_color[3];
     uint8_t error_bg_color[3];
+    const char *filename;
 };
 
 int ripcheck_parse_image_options(

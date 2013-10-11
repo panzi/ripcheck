@@ -5,6 +5,12 @@ if(WITH_VISUALIZE)
 	set(visulaize_SRCS print_image.c print_image.h)
 endif()
 
+if(HAVE_STRLCPY)
+	add_definitions(-DHAVE_STRLCPY)
+else()
+	set(strlcpy_SRCS strlcpy.c)
+endif()
+
 add_executable(ripcheck
 	main.c
 	print_text.c
@@ -12,7 +18,8 @@ add_executable(ripcheck
 	print_text.h
 	ripcheck.h
 	ripcheck_endian.h
-	${visulaize_SRCS})
+	${visulaize_SRCS}
+	${strlcpy_SRCS})
 
 if(WITH_VISUALIZE)
 	target_link_libraries(ripcheck ${LIBPNG_LIBRARIES})
