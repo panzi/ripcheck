@@ -100,7 +100,7 @@ static void usage (int argc, char *argv[])
         "\n"
         "      --image-filename=PATTERN  use PATTERN for the names of the generated image files\n"
         "                                Patterns can reference certain variables using {VARNAME}.\n"
-        "                                In order to put a { or }} in the resulting filename write {{ or }}.\n"
+        "                                In order to put a { or } in the resulting filename write {{ or }}.\n"
         "\n"
         "                                errorname           'pop', 'drop' or 'dupes'\n"
         "                                filename            name of the WAV file without path\n"

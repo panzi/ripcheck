@@ -130,7 +130,7 @@ Only PCM WAV files are supported.
 	
 	    --image-filename=PATTERN  use PATTERN for the names of the generated image files
 	                              Patterns can reference certain variables using {VARNAME}.
-	                              In order to put a { or }} in the resulting filename write {{ or }}.
+	                              In order to put a { or } in the resulting filename write {{ or }}.
 	
 	                              errorname           'pop', 'drop' or 'dupes'
 	                              filename            name of the WAV file without path
