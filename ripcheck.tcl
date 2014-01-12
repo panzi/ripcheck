@@ -1,4 +1,4 @@
-#!/usr/local/bin/tclsh8.6
+#!/usr/bin/tclsh
 
 # to use:
 #
@@ -418,7 +418,7 @@ proc DoFile {fname} {
 proc ctest {fname} {
 	# uncomment this if you don't have the ripcheckc program compiled for your platform
 	#return 1
-	set results [exec /m/admin/ripcheckc $fname 2>@1]
+	set results [exec ripcheckc $fname 2>@1]
 	puts -nonewline "Quick test: $fname"
 	if {[string first "everything ok" $results] == -1} {
 		puts "\n----\nFound potential WAV file CD ripping defects in\n$fname\nanalyzing further and making a GIF file of the problematic areas, with a corresponding TXT file.\n"
