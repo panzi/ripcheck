@@ -1,7 +1,7 @@
 # the name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
 
-set(COMPILER_PREFIX "i686-pc-mingw32" CACHE STRING "Prefix of compiler binaries")
+set(COMPILER_PREFIX "i686-w64-mingw32" CACHE STRING "Prefix of compiler binaries")
 
 # here is the target environment located
 set(CMAKE_FIND_ROOT_PATH /usr/${COMPILER_PREFIX})

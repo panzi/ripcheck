@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.0)
 
-project(ripcheck)
+project(ripcheck C)
 
 include(CheckFunctionExists)
 
@@ -13,25 +13,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		option(WITH_VISUALIZE "Build with visualization support" ON)
 	else()
 		option(WITH_VISUALIZE "Build with visualization support" OFF)
-		message("
-To build visualization support for Windows binaries please download
-libpng (libpng-1.2.*-lib.zip) and zlib (zlib1*-dll.zip) and extract
-these archives to contrib/libpng and contrib/zlib.
-
-In order to run the resulting binary you need libpng12.dll (download
-libpng-1.2.*-bin.zip) and zlib1.dll (included in zlib1*-dll.zip).
-
-See:
-http://www.libpng.org/pub/png/libpng.html
-http://www.zlib.net/
-")
 	endif()
+
+	set(CMAKE_EXE_LINKER_FLAGS "-static")
+
 	if(WITH_VISUALIZE)
-		set(LIBPNG_INCLUDE_DIRS
-			"${CMAKE_SOURCE_DIR}/contrib/libpng/include;${CMAKE_SOURCE_DIR}/contrib/zlib/include")
-		set(LIBPNG_LIBRARY_DIRS
-			"${CMAKE_SOURCE_DIR}/contrib/libpng/lib;${CMAKE_SOURCE_DIR}/contrib/zlib/lib")
-		set(LIBPNG_LIBRARIES png12)
+		set(LIBPNG_LIBRARIES png16 z)
 	endif()
 elseif(PKG_CONFIG_FOUND)
 	pkg_check_modules(LIBPNG libpng)
