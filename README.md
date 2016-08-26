@@ -1,10 +1,7 @@
 ripcheck
 ========
-"ripcheck" runs a variety of tests on a WAV file, to see if there are
+"ripcheck" runs a variety of tests on WAV files, to see if there are
 potential mistakes that occurred in converting a CD to a WAV file.
-
-I've made this program available as free & open source, and it can be
-download at [Sourceforce](https://sourceforge.net/projects/ripcheck/).
 
 You can use this program on your own WAV files to see if there are
 potential defects in your CD rips.
@@ -12,17 +9,12 @@ potential defects in your CD rips.
 More documentation (and discussion) is available at
 [blog.magnatune.com](http://blog.magnatune.com/2013/09/ripcheck-detect-defects-in-cd-rips.html).
 
-WHAT?
------
- * ripcheckc.c - source code
- * ripcheckc - Mac OSX command line binary
- * ripcheckc.exe - Windows command line binary
- * ripcheck.tcl - Slower version, creates pretty graphics of problem areas
- * README.TXT - this info file
 
-Released under [GPL v3 license](http://www.gnu.org/licenses/gpl.html)
+License
+-------
+See COPYING.txt for the [GPL v3 license](http://www.gnu.org/licenses/gpl-3.0.html)
 
-WHY?
+Why?
 ----
 This program was written because we'd received some complaints of
 occasional "pops" at the beginning on some albums at Magnatune.
@@ -39,12 +31,12 @@ all the file formats we offered at Magnatune. Unfortunately, we didn't
 notice this at the time. Most people didn't notice it either, probably
 assuming it was an audio streaming glitch, since it was so short.
 
-In order to discover just how bad the problem might be, I wrote a
-program called "ripcheck", because, to my surprise, no program
+In order to discover just how bad the problem might be, I (John Buckman)
+wrote a program called "ripcheck", because, to my surprise, no program
 currently exists to try to determine if there might be CD ripping
 errors in an audio file.
 
-WHAT KINDS OF PROBLEMS?
+What kinds of problems?
 -----------------------
 Besides the common problem short click at the beginning of a track,
 this program also discovers:
@@ -76,14 +68,15 @@ to do automatic quality control on the audio they distribute.
 All our releases are now automatically tested with "ripcheck" before
 we make them available.
 
-HOW TO OBTAIN:
---------------
-If you'd like to run this program yourself, on your own music library,
-please download at [Sourceforce](https://sourceforge.net/projects/ripcheck/).
+How to obtain
+-------------
+The original version of this program can be found at
+[Sourceforce](https://sourceforge.net/projects/ripcheck/). This fork
+however can be found at [GitHub](https://github.com/panzi/ripcheck).
 
 It's a command line program that works on Windows, Mac and Unix/Linux.
-There is a fast version, which shows potential problems as text, and a
-much slower version which generates graphics of the WAV file defects,
+It prints potential problems as text, and a if it is compiled with
+libpng support it can also generate graphics of the WAV file defects,
 so you can easily see where the problem is.
 
 In all cases, the location of the glitch is given in samples and
@@ -106,26 +99,104 @@ The source code is pretty simple to read, and I'd love for any
 programmers who find it useful to devise other tests and add them to
 the list of things to detect.
 
-HOW TO RUN:
------------
+Usage
+-----
 To run it yourself, type:
 
-	ripcheckc <wavfilename>
+    ripcheck [OPTIONS] [WAVE-FILE]...
 
-Only WAV files are handled, and they must be 44k/16bit.
+Only PCM WAV files are supported.
 
-If you downloaded the windows .exe version of this program, you will 
-need to install [cygwin](http://www.cygwin.com/).
+### Options
 
-If you want to use this program on Unix/Linux, you will need to
-compile the program with this command line:
+	-h, --help                    print this help message
+	-v, --version                 print version information
+	-V, --visualize[=PARAMS]      print wave forms around found problems to PNG images
+	                              PARAMS is a comma separated list of key-value pairs that
+	                              define the size and color of the generated images.
+	
+	                              samp-width=PIXELS      width of a sample (default: 20)
+	                              samp-height=PIXELS     height of a samle above the zero line
+	                                                     (default: 50)
+	                              bg-color=COLOR         background color (default: #FFFFFF)
+	                              wave-color=COLOR       color of the wave form (default: #2084FF)
+	                              zero-color=COLOR       color of the zero line (default: #7F7F7F)
+	                              error-color=COLOR      color of the error sample (default: #FF2020)
+	                              error-bg-color=COLOR   background color of the error sample
+	                                                     (default: #FFC440)
+	
+	                              COLOR may be a HTML like hexadecimal color string (e.g. #FFFFFF)
+	                              or one of the 16 defined HTML color names (e.g. white).
+	
+	    --image-filename=PATTERN  use PATTERN for the names of the generated image files
+	                              Patterns can reference certain variables using {VARNAME}.
+	                              In order to put a { or } in the resulting filename write {{ or }}.
+	
+	                              errorname           'pop', 'drop' or 'dupes'
+	                              filename            name of the WAV file without path
+	                              basename            name of the WAV file without path or extension
+	                              filepath            path of the WAV file
+	                              dirname             path of the directory of the WAV file
+	                              channel             channel in which the error happened
+	                              first_error_sample  first sample in this error
+	                              last_error_sample   last sample in this error
+	                              error_samples       number of samples in this error
+	                              first_window_sample first sample in current window
+	                              last_window_sample  last sample in current window
+	                              window_size         number of samples in window
+	
+	                              If the error happened at the very beginning of the WAV file then
+	                              window_size might be bigger than what last_window_sample and
+	                              first_window_sample imply.
+	
+	-t, --max-time=TIME           stop analyzing at TIME
+	-b, --max-bad-areas=COUNT     stop analyzing after COUNT problems found
+	-i, --intro-length=TIME       start analyzing at TIME (default: 5 sec)
+	-o, --outro-length=TIME       stop analyzing at TIME before end (default: 5 sec)
+	-p, --pop-limit=VOLUME        set the minimum volume of a pop to VOLUME (default: 33.333 %)
+	-d, --drop-limit=VOLUME       set the minimum volume of samples around a drop to VOLUME
+	                              (default: 66.666 %)
+	    --pop-drop-dist=TIME      ignore drops before TIME after a pop (default: 8 sampels)
+	-u, --dupe-limit=VOLUME       ignore dupes more silent than VOLUME (default: 0.033 %)
+	    --min-dupes=COUNT         set the minimum repetiton of the same sample that is
+	                              recognized as a dupe to COUNT (default: 400)
+	    --dupe-dist=TIME          ignore dupes that follow closer than TIME to another dupe
+	                              (default: 1 sample)
+	-w, --window-size=COUNT       print COUNT samples when a problem is found (minimum: 7)
+	                              Even if COUNT is bigger ripcheck does not use more than 7
+	                              samples at a time for detecting problems. (default: 7)
 
-	gcc ripcheckc.c -o ripcheckc
+### Units
 
-The ripcheck.tcl program requires Tcl/Tk to be on your system, and
-ImageMagick as well. It runs about 3x slower, but creates attractive
-graphics of the WAV file problem areas. This can be a great time saver
-if you have a lot of problematic WAV files, aiding you in quickly
-reviewing the problems visually to decide if they are false positives.
+    TIME
+      TIME values can be given in samples, seconds or milliseconds.
+      Examples: 400 samp, 5 sec, 4320 msec
 
-\- John Buckman <john@magnatune.com>
+      samp, (node) ... samples
+      sec, s ......... seconds
+      msec, ms ....... millieseconds
+
+    VOLUME
+      VOLUME values can be given in bit rate dependant values or percentages.
+      Examples: 32000, 33.33 %
+
+      (node) ... bit rate dependant absolute volume
+      % ........ percentage of maximum possible volume
+
+Build
+-----
+This program uses [cmake](http://www.cmake.org/) to compile:
+
+    make build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+    make -j2
+    sudo make install
+
+If you don't have libpng or don't want to build visualization support
+use this cmake line:
+
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DWITH_VISUALIZE=OFF
+
+\- John Buckman <john@magnatune.com> (original version)  
+\- Mathias Panzenböck (this fork)

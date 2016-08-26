@@ -1,0 +1,12 @@
+.*
+*~
+build*
+contrib/libpng
+contrib/zlib
+contrib/zlib1*-dll.zip
+contrib/libpng-1.2.*-lib.zip
+contrib/libpng-1.2.*-bin.zip
+contrib/libpng12.dll
+ripcheck-*/
+*.zip
+config.sh
