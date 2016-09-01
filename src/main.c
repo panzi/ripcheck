@@ -152,7 +152,7 @@ static void usage (int argc, char *argv[])
         "    VOLUME values can be given in bit rate dependant values or in percentages.\n"
         "    Examples: 32000, 33.33 %%\n"
         "\n"
-        "    (node) ... bit rate dependant absolute volume\n"
+        "    (none) ... bit rate dependant absolute volume\n"
         "    %% ........ percentage of maximum possible volume\n"
         "\n"
         "Report bugs to: https://github.com/panzi/ripcheck/issues\n");

@@ -180,7 +180,7 @@ Only PCM WAV files are supported.
       VOLUME values can be given in bit rate dependant values or percentages.
       Examples: 32000, 33.33 %
 
-      (node) ... bit rate dependant absolute volume
+      (none) ... bit rate dependant absolute volume
       % ........ percentage of maximum possible volume
 
 Build
