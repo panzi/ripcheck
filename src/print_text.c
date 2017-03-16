@@ -149,11 +149,10 @@ void ripcheck_text_error(
     const char *fmt, ...)
 {
     (void)data;
-    (void)context;
     (void)errnum;
 
     va_list ap;
-	fprintf(stderr, "error: ");
+	fprintf(stderr, "%s: error: ", context->filename);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
@@ -166,10 +165,9 @@ void ripcheck_text_warning(
     const char *fmt, ...)
 {
     (void)data;
-    (void)context;
 
     va_list ap;
-	fprintf(stderr, "warning: ");
+	fprintf(stderr, "%s: warning: ", context->filename);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
