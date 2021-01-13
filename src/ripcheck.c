@@ -241,7 +241,7 @@ int ripcheck(
     context.fmt.block_align     = le16toh(context.fmt.block_align);
     context.fmt.bits_per_sample = le16toh(context.fmt.bits_per_sample);
 
-    const int max_value = ~(~0 << (context.fmt.bits_per_sample - 1));
+    const int max_value = ~(~0u << (context.fmt.bits_per_sample - 1));
     context.pop_limit  = abs_volume(max_value, pop_limit);
     context.drop_limit = abs_volume(max_value, drop_limit);
     context.dupe_limit = abs_volume(max_value, dupe_limit);
@@ -406,7 +406,7 @@ int ripcheck_data(
 
     // mid is mid-point for unsinged values and bitmask of sign for singed values
     const int mid  = 1 << (bits_per_sample - 1);
-    const int mask = ~0 << bits_per_sample;
+    const int mask = ~0u << bits_per_sample;
 
     const int pop_limit  = context->pop_limit;
     const int drop_limit = context->drop_limit;

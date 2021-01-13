@@ -703,7 +703,7 @@ static void print_image(
     const size_t zero   = sample_height + 1;
     const size_t height = sample_height * 2 + 1;
     const size_t width  = sample_width * samples;
-    const int max_value = ~(~0 << (context->fmt.bits_per_sample - 1));
+    const int max_value = ~(~0u << (context->fmt.bits_per_sample - 1));
 
 /*
     snprintf(filename, PATH_MAX, "%s_sample_%"PRIzu"_channel_%u_%s.png",
