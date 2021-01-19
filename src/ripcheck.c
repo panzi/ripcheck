@@ -97,7 +97,7 @@ int ripcheck_parse_volume(const char *str, ripcheck_volume_t *volumeptr)
         }
 
         volumeptr->unit         = RIPCHECK_RATIO;
-        volumeptr->volume.ratio = ratio;
+        volumeptr->volume.ratio = ratio / 100;
     }
     else {
         unsigned long long absval = strtoull(str, &endptr, 10);
